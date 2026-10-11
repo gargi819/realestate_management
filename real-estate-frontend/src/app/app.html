@@ -1,0 +1,58 @@
+<div class="app-layout">
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a routerLink="/" class="navbar-brand">
+        <span class="brand-accent">Real</span>Estate
+      </a>
+      <nav class="nav-links">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+          Home
+        </a>
+        <a routerLink="/properties" routerLinkActive="active" class="nav-link">
+          Properties
+        </a>
+        <a routerLink="/rental-history" routerLinkActive="active" class="nav-link">
+          My Rental History
+        </a>
+        <a routerLink="/add-property" routerLinkActive="active" class="nav-link nav-btn">
+          Add Property
+        </a>
+
+        <!-- Auth Section -->
+        <ng-container *ngIf="authService.currentUser$ | async as user; else guestNav">
+          <div class="user-pill" title="Logged in as {{ user.name }} ({{ user.role }})">
+            <span class="user-avatar">👤</span>
+            <span class="user-name">{{ user.name }}</span>
+            <button type="button" class="logout-btn" (click)="authService.logout()" title="Sign Out">
+              Logout
+            </button>
+          </div>
+        </ng-container>
+        <ng-template #guestNav>
+          <a routerLink="/login" routerLinkActive="active" class="nav-link login-nav-link">
+            🔑 Sign In
+          </a>
+        </ng-template>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <h4 class="footer-title">Real Estate Management System</h4>
+      <p class="footer-description">
+        A simple Java Full Stack project built with Angular, Spring Boot and MySQL.
+      </p>
+      <p class="footer-copy">
+        &copy; 2026 Real Estate Management System
+      </p>
+    </div>
+  </footer>
+</div>

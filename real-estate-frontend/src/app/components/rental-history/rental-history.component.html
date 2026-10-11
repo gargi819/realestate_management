@@ -1,0 +1,309 @@
+<div class="rental-tracker-container">
+
+  <!-- Page Header -->
+  <div class="tracker-header">
+    <div class="header-left">
+      <h1 class="page-title">Smart Rent Tracker</h1>
+      <p class="page-subtitle">
+        Review your rental history, compare previous rent against current market listings, and discover cheaper rental alternatives.
+      </p>
+    </div>
+
+    <!-- Tenant Account / Login Profile Switcher -->
+    <div class="tenant-login-card">
+      <div class="tenant-avatar">👤</div>
+      <div class="tenant-details">
+        <span class="tenant-badge">Current Tenant Session</span>
+        <div class="tenant-name">{{ currentTenant?.name || 'Tenant' }}</div>
+        <div class="tenant-email">{{ currentTenant?.email }}</div>
+      </div>
+      <div class="tenant-switcher">
+        <label for="tenantSelect" class="switcher-label">Switch Tenant:</label>
+        <select
+          id="tenantSelect"
+          class="tenant-select"
+          [ngModel]="selectedTenantId"
+          (ngModelChange)="onTenantChange($event)"
+        >
+          <option *ngFor="let t of tenants" [value]="t.id">
+            {{ t.name }} (ID: {{ t.id }})
+          </option>
+        </select>
+        <div style="margin-top: 6px; font-size: 0.8rem;">
+          <a routerLink="/login" style="color: #2563eb; text-decoration: underline;">🔑 Login / Register Page</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: My Rental History -->
+  <section class="section-card">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">📋 My Rental History</h2>
+        <p class="section-desc">Past and ongoing rental contracts on record for {{ currentTenant?.name }}.</p>
+      </div>
+      <div class="header-actions">
+        <button (click)="openAddModal()" class="btn btn-secondary">
+          + Record New Rental
+        </button>
+        <button (click)="findCheaperRentals()" class="btn btn-primary btn-cta" [disabled]="loadingCheaper">
+          <span *ngIf="loadingCheaper" class="btn-spinner"></span>
+          🔍 Find Cheaper Rentals
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingHistory" class="state-container">
+      <div class="spinner"></div>
+      <p class="loading-text">Loading your rental history...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!loadingHistory && historyError" class="alert alert-error">
+      {{ historyError }}
+    </div>
+
+    <!-- Empty Rental History State -->
+    <div *ngIf="!loadingHistory && !historyError && rentalRecords.length === 0" class="empty-state-card">
+      <div class="empty-icon">📂</div>
+      <h3>No Rental History Found</h3>
+      <p>No rental records are registered yet for this tenant. Click <strong>Record New Rental</strong> to log a rental contract and unlock cheaper comparisons.</p>
+      <button (click)="openAddModal()" class="btn btn-primary">
+        + Record Your First Rental
+      </button>
+    </div>
+
+    <!-- Rental History Table / Cards -->
+    <div *ngIf="!loadingHistory && rentalRecords.length > 0" class="history-grid">
+      <div *ngFor="let record of rentalRecords; let i = index" class="history-card" [class.latest-card]="i === 0">
+        <div class="history-card-top">
+          <div class="history-prop-title">
+            {{ record.property.title || 'Rental Property #' + record.id }}
+          </div>
+          <span *ngIf="i === 0" class="badge-latest">Latest Active Benchmark</span>
+        </div>
+
+        <p class="history-location">📍 {{ record.property.location || 'Location Not Specified' }}</p>
+
+        <div class="history-metrics">
+          <div class="metric-item">
+            <span class="m-label">Monthly Rent</span>
+            <span class="m-val highlight-rent">₹{{ record.monthlyRent | number }} / mo</span>
+          </div>
+          <div class="metric-item">
+            <span class="m-label">Lease Period</span>
+            <span class="m-val">{{ record.startDate | date:'mediumDate' }} — {{ record.endDate ? (record.endDate | date:'mediumDate') : 'Present' }}</span>
+          </div>
+          <div class="metric-item" *ngIf="record.property.propertyType">
+            <span class="m-label">Property Type</span>
+            <span class="m-val">{{ record.property.propertyType }}</span>
+          </div>
+          <div class="metric-item" *ngIf="record.property.area">
+            <span class="m-label">Living Area</span>
+            <span class="m-val">{{ record.property.area }} sq.ft</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: Cheaper Rental Recommendations -->
+  <section *ngIf="hasSearchedCheaper" class="section-card recommendations-section" id="recommendations">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">💡 Cheaper Rental Recommendations</h2>
+        <p class="section-desc" *ngIf="cheaperResponse">
+          {{ cheaperResponse.message }}
+        </p>
+      </div>
+      <div class="benchmark-pill" *ngIf="cheaperResponse && cheaperResponse.previousRent > 0">
+        <span>Previous Benchmark Rent:</span>
+        <strong>₹{{ cheaperResponse.previousRent | number }}/mo</strong>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingCheaper" class="state-container">
+      <div class="spinner"></div>
+      <p class="loading-text">Analyzing market prices and comparing against your previous rent...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!loadingCheaper && cheaperError" class="alert alert-error">
+      {{ cheaperError }}
+    </div>
+
+    <!-- Empty Cheaper Rentals State -->
+    <div *ngIf="!loadingCheaper && cheaperResponse && cheaperResponse.cheaperRentals.length === 0" class="empty-cheaper-card">
+      <div class="empty-icon">🎉</div>
+      <h3>{{ cheaperResponse.message }}</h3>
+      <p>
+        None of the currently available rental properties offer a rate strictly below your previous rent of
+        <strong>₹{{ cheaperResponse.previousRent | number }}/mo</strong>.
+      </p>
+      <a routerLink="/properties" class="btn btn-outline">
+        Browse All Property Listings
+      </a>
+    </div>
+
+    <!-- Results Available -->
+    <div *ngIf="!loadingCheaper && cheaperResponse && cheaperResponse.cheaperRentals.length > 0">
+
+      <!-- Reusable Filter & Search Controls -->
+      <div class="cheaper-filters-bar">
+        <div class="filter-group-search">
+          <input
+            type="text"
+            class="filter-input"
+            placeholder="Search recommended rentals by location or title..."
+            [(ngModel)]="searchLocation"
+            (ngModelChange)="applyCheaperFilters()"
+          />
+        </div>
+        <div class="filter-group-select">
+          <select
+            class="filter-select"
+            [(ngModel)]="selectedPropertyType"
+            (ngModelChange)="applyCheaperFilters()"
+          >
+            <option value="">All Property Types</option>
+            <option value="Apartment">Apartment</option>
+            <option value="Villa">Villa</option>
+            <option value="House">House</option>
+            <option value="Commercial">Commercial</option>
+          </select>
+        </div>
+        <div class="sort-indicator">
+          <span>⚡ Sorted: Lowest Rent First</span>
+        </div>
+      </div>
+
+      <!-- No Filtered Matches State -->
+      <div *ngIf="filteredCheaperRentals.length === 0" class="no-filter-match">
+        <p>No cheaper rentals match your current search criteria. Try clearing the filters.</p>
+        <button (click)="searchLocation = ''; selectedPropertyType = ''; applyCheaperFilters()" class="btn btn-outline">
+          Reset Filters
+        </button>
+      </div>
+
+      <!-- Recommendations Cards Grid -->
+      <div *ngIf="filteredCheaperRentals.length > 0" class="recommendations-grid">
+        <div *ngFor="let item of filteredCheaperRentals" class="recommendation-card">
+          <div class="card-badge-row">
+            <span class="badge badge-for-rent">Available For Rent</span>
+            <span class="savings-chip">
+              🔥 Save {{ item.percentageSavings }}%
+            </span>
+          </div>
+
+          <h3 class="rec-title">{{ item.property.title }}</h3>
+          <p class="rec-location">📍 {{ item.property.location }}</p>
+
+          <!-- Savings Spotlight Banner -->
+          <div class="savings-spotlight">
+            <div class="spotlight-metric">
+              <span class="s-label">New Rent</span>
+              <span class="s-price">₹{{ item.currentRent | number }}/mo</span>
+            </div>
+            <div class="spotlight-divider">vs</div>
+            <div class="spotlight-metric old-rent">
+              <span class="s-label">Previous Rent</span>
+              <span class="s-old-price">₹{{ item.previousRent | number }}/mo</span>
+            </div>
+            <div class="spotlight-savings">
+              <span class="s-label">Monthly Savings</span>
+              <span class="s-save-val">+₹{{ item.monthlySavings | number }}/mo</span>
+            </div>
+          </div>
+
+          <!-- Specs Info Table -->
+          <div class="rec-specs">
+            <span *ngIf="item.property.bedrooms">🛏️ {{ item.property.bedrooms }} BHK</span>
+            <span *ngIf="item.property.bathrooms">🚿 {{ item.property.bathrooms }} Baths</span>
+            <span *ngIf="item.property.area">📐 {{ item.property.area }} sq.ft</span>
+            <span *ngIf="item.property.propertyType">🏢 {{ item.property.propertyType }}</span>
+          </div>
+
+          <p class="rec-desc">{{ item.property.description }}</p>
+
+          <!-- Card Actions -->
+          <div class="rec-actions">
+            <a [routerLink]="['/properties', item.property.id]" class="btn btn-view">
+              View Property & Affordability
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Add Rental Record Modal -->
+  <div *ngIf="showAddModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <h3 class="modal-title">Record Rental History</h3>
+      <p class="modal-subtitle">
+        Add a previous or existing rental contract for <strong>{{ currentTenant?.name }}</strong> to keep your tracking accurate.
+      </p>
+
+      <div *ngIf="addModalError" class="calc-error modal-error">
+        {{ addModalError }}
+      </div>
+
+      <div class="modal-form">
+        <div class="form-group">
+          <label class="form-label">Rental Property</label>
+          <select [(ngModel)]="newRecord.propertyId" class="form-select">
+            <option [value]="0" disabled>Select property...</option>
+            <option *ngFor="let p of allProperties" [value]="p.id">
+              {{ p.title }} ({{ p.location }}) - ₹{{ p.price | number }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Monthly Rent Amount (₹)</label>
+          <input
+            type="number"
+            class="form-input"
+            [(ngModel)]="newRecord.monthlyRent"
+            placeholder="e.g. 50000"
+            min="1"
+          />
+        </div>
+
+        <div class="form-group-row">
+          <div class="form-group">
+            <label class="form-label">Start Date</label>
+            <input
+              type="date"
+              class="form-input"
+              [(ngModel)]="newRecord.startDate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">End Date (Optional)</label>
+            <input
+              type="date"
+              class="form-input"
+              [(ngModel)]="newRecord.endDate"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button (click)="closeAddModal()" [disabled]="savingRecord" class="btn btn-outline">
+          Cancel
+        </button>
+        <button (click)="saveRentalRecord()" [disabled]="savingRecord" class="btn btn-primary">
+          {{ savingRecord ? 'Saving...' : 'Save Rental Record' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

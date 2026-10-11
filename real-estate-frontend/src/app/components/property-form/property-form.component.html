@@ -1,0 +1,213 @@
+<div class="form-page-container">
+
+  <div class="form-card">
+    
+    <!-- Form Header -->
+    <div class="form-header">
+      <h1 class="form-title">{{ isEditMode ? 'Edit Property' : 'Add New Property' }}</h1>
+      <p class="form-subtitle">
+        {{ isEditMode ? 'Update details for listing #' + propertyId : 'Fill in the information below to publish a new property listing.' }}
+      </p>
+    </div>
+
+    <!-- Alerts -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-error">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading Spinner for Edit Mode -->
+    <div *ngIf="loading" class="form-loading">
+      <div class="spinner"></div>
+      <p>Loading property details...</p>
+    </div>
+
+    <!-- Reactive Form -->
+    <form *ngIf="!loading" [formGroup]="propertyForm" (ngSubmit)="onSubmit()" novalidate>
+
+      <!-- Section 1: Property Information -->
+      <fieldset class="form-section">
+        <legend class="section-legend">Property Information</legend>
+
+        <div class="form-field">
+          <label for="title" class="field-label">Title *</label>
+          <input
+            id="title"
+            name="title"
+            type="text"
+            formControlName="title"
+            placeholder="e.g. 2 BHK Apartment in City Center"
+            class="field-input"
+            [class.invalid]="propertyForm.get('title')?.invalid && propertyForm.get('title')?.touched"
+          />
+          <span class="field-error" *ngIf="propertyForm.get('title')?.invalid && propertyForm.get('title')?.touched">
+            Title is required.
+          </span>
+        </div>
+
+        <div class="form-field">
+          <label for="description" class="field-label">Description *</label>
+          <textarea
+            id="description"
+            name="description"
+            rows="3"
+            formControlName="description"
+            placeholder="Provide key details about the property..."
+            class="field-input"
+            [class.invalid]="propertyForm.get('description')?.invalid && propertyForm.get('description')?.touched"
+          ></textarea>
+          <span class="field-error" *ngIf="propertyForm.get('description')?.invalid && propertyForm.get('description')?.touched">
+            Description is required.
+          </span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field col">
+            <label for="propertyType" class="field-label">Property Type *</label>
+            <select
+              id="propertyType"
+              name="propertyType"
+              formControlName="propertyType"
+              class="field-select"
+              [class.invalid]="propertyForm.get('propertyType')?.invalid && propertyForm.get('propertyType')?.touched"
+            >
+              <option value="" disabled>Select Property Type</option>
+              <option *ngFor="let type of propertyTypes" [value]="type">{{ type }}</option>
+            </select>
+            <span class="field-error" *ngIf="propertyForm.get('propertyType')?.invalid && propertyForm.get('propertyType')?.touched">
+              Property Type is required.
+            </span>
+          </div>
+
+          <div class="form-field col">
+            <label for="status" class="field-label">Status *</label>
+            <select
+              id="status"
+              name="status"
+              formControlName="status"
+              class="field-select"
+              [class.invalid]="propertyForm.get('status')?.invalid && propertyForm.get('status')?.touched"
+            >
+              <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+            </select>
+            <span class="field-error" *ngIf="propertyForm.get('status')?.invalid && propertyForm.get('status')?.touched">
+              Status is required.
+            </span>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Section 2: Location -->
+      <fieldset class="form-section">
+        <legend class="section-legend">Location</legend>
+
+        <div class="form-field">
+          <label for="location" class="field-label">Location *</label>
+          <input
+            id="location"
+            name="location"
+            type="text"
+            formControlName="location"
+            placeholder="e.g. Navi Mumbai, Maharashtra"
+            class="field-input"
+            [class.invalid]="propertyForm.get('location')?.invalid && propertyForm.get('location')?.touched"
+          />
+          <span class="field-error" *ngIf="propertyForm.get('location')?.invalid && propertyForm.get('location')?.touched">
+            Location is required.
+          </span>
+        </div>
+      </fieldset>
+
+      <!-- Section 3: Property Details -->
+      <fieldset class="form-section">
+        <legend class="section-legend">Property Details</legend>
+
+        <div class="form-row">
+          <div class="form-field col">
+            <label for="price" class="field-label">Price (₹) *</label>
+            <input
+              id="price"
+              name="price"
+              type="number"
+              formControlName="price"
+              placeholder="e.g. 7500000"
+              class="field-input"
+              [class.invalid]="propertyForm.get('price')?.invalid && propertyForm.get('price')?.touched"
+            />
+            <span class="field-error" *ngIf="propertyForm.get('price')?.invalid && propertyForm.get('price')?.touched">
+              <span *ngIf="propertyForm.get('price')?.errors?.['required']">Price is required.</span>
+              <span *ngIf="propertyForm.get('price')?.errors?.['min']">Price must be greater than 0.</span>
+            </span>
+          </div>
+
+          <div class="form-field col">
+            <label for="area" class="field-label">Area (sq.ft) *</label>
+            <input
+              id="area"
+              name="area"
+              type="number"
+              formControlName="area"
+              placeholder="e.g. 950"
+              class="field-input"
+              [class.invalid]="propertyForm.get('area')?.invalid && propertyForm.get('area')?.touched"
+            />
+            <span class="field-error" *ngIf="propertyForm.get('area')?.invalid && propertyForm.get('area')?.touched">
+              <span *ngIf="propertyForm.get('area')?.errors?.['required']">Area is required.</span>
+              <span *ngIf="propertyForm.get('area')?.errors?.['min']">Area must be greater than 0.</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field col">
+            <label for="bedrooms" class="field-label">Bedrooms *</label>
+            <input
+              id="bedrooms"
+              name="bedrooms"
+              type="number"
+              min="0"
+              formControlName="bedrooms"
+              class="field-input"
+              [class.invalid]="propertyForm.get('bedrooms')?.invalid && propertyForm.get('bedrooms')?.touched"
+            />
+            <span class="field-error" *ngIf="propertyForm.get('bedrooms')?.invalid && propertyForm.get('bedrooms')?.touched">
+              Bedrooms cannot be negative.
+            </span>
+          </div>
+
+          <div class="form-field col">
+            <label for="bathrooms" class="field-label">Bathrooms *</label>
+            <input
+              id="bathrooms"
+              name="bathrooms"
+              type="number"
+              min="0"
+              formControlName="bathrooms"
+              class="field-input"
+              [class.invalid]="propertyForm.get('bathrooms')?.invalid && propertyForm.get('bathrooms')?.touched"
+            />
+            <span class="field-error" *ngIf="propertyForm.get('bathrooms')?.invalid && propertyForm.get('bathrooms')?.touched">
+              Bathrooms cannot be negative.
+            </span>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Action Buttons -->
+      <div class="form-actions">
+        <button type="button" (click)="onCancel()" class="btn btn-outline">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="submitting" class="btn btn-primary">
+          {{ submitting ? 'Saving...' : (isEditMode ? 'Update Property' : 'Add Property') }}
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+</div>

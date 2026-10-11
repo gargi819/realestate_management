@@ -1,0 +1,314 @@
+<div class="details-page-container">
+
+  <!-- Loading State with Spinner -->
+  <div *ngIf="loading" class="state-container">
+    <div class="spinner"></div>
+    <p class="loading-text">Loading property...</p>
+  </div>
+
+  <!-- Error / Not Found State -->
+  <div *ngIf="!loading && errorMessage" class="card not-found-card">
+    <div class="not-found-icon">⚠️</div>
+    <h2 class="not-found-title">{{ errorMessage }}</h2>
+    <p class="not-found-text">The requested property listing does not exist or has been removed.</p>
+    <a routerLink="/properties" class="btn btn-outline">
+      Back to Properties
+    </a>
+  </div>
+
+  <!-- Success Notification -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+
+  <!-- Property Details Card -->
+  <div *ngIf="!loading && property" class="card details-card">
+
+    <!-- Header: Prominent Title, Location, Price -->
+    <div class="details-hero">
+      <div class="hero-left">
+        <h1 class="property-title">{{ property.title }}</h1>
+        <p class="property-location">📍 {{ property.location }}</p>
+      </div>
+      <div class="hero-right">
+        <div class="property-price">₹{{ property.price | number }}</div>
+        <span class="badge" [ngClass]="'badge-' + property.status.toLowerCase().replaceAll(' ', '-')">
+          {{ property.status }}
+        </span>
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- Property Information Section -->
+    <div class="details-section">
+      <h2 class="section-title">Property Information</h2>
+      <div class="info-table">
+        <div class="info-row">
+          <span class="info-key">Type</span>
+          <span class="info-val">{{ property.propertyType }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Area</span>
+          <span class="info-val">{{ property.area }} sq.ft</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Bedrooms</span>
+          <span class="info-val">{{ property.bedrooms }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Bathrooms</span>
+          <span class="info-val">{{ property.bathrooms }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Status</span>
+          <span class="info-val">{{ property.status }}</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- Description Section -->
+    <div class="details-section">
+      <h2 class="section-title">Description</h2>
+      <p class="property-description">{{ property.description }}</p>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- Actions -->
+    <div class="details-actions">
+      <button (click)="toggleAffordability()" class="btn btn-affordability">
+        {{ showAffordability ? '✕ Hide Affordability Checker' : '🧮 Check Affordability' }}
+      </button>
+      <a [routerLink]="['/edit-property', property.id]" class="btn btn-edit">
+        Edit Property
+      </a>
+      <button (click)="openDeleteModal()" class="btn btn-delete">
+        Delete Property
+      </button>
+      <a routerLink="/properties" class="btn btn-back">
+        Back
+      </a>
+    </div>
+
+  </div>
+
+  <!-- FEATURE 1: Property Affordability Checker Section -->
+  <div *ngIf="!loading && property && showAffordability" class="card affordability-card" id="affordability-section">
+    <div class="affordability-header">
+      <div class="header-icon">🧮</div>
+      <div>
+        <h2 class="affordability-title">Property Affordability & EMI Checker</h2>
+        <p class="affordability-subtitle">
+          Calculate your estimated home loan EMI, total interest, and verify if this property fits within your monthly budget.
+        </p>
+      </div>
+    </div>
+
+    <!-- Property Actual Price Benchmark Badge -->
+    <div class="property-price-benchmark">
+      <span class="benchmark-label">Property Actual Price:</span>
+      <span class="benchmark-value">₹{{ property.price | number }}</span>
+      <span class="benchmark-note">(Automatically configured)</span>
+    </div>
+
+    <!-- Interactive Input Form Grid -->
+    <div class="calculator-grid">
+
+      <!-- Down Payment Input -->
+      <div class="calc-group">
+        <label class="calc-label">Down Payment (₹)</label>
+        <div class="input-with-symbol">
+          <span class="currency-symbol">₹</span>
+          <input
+            type="number"
+            class="calc-input"
+            [(ngModel)]="downPayment"
+            (ngModelChange)="calculateAffordability()"
+            min="0"
+            [max]="property.price"
+            placeholder="e.g. 1500000"
+          />
+        </div>
+        <div class="quick-presets">
+          <button type="button" class="preset-chip" (click)="setDownPaymentPercent(10)">10%</button>
+          <button type="button" class="preset-chip" (click)="setDownPaymentPercent(20)">20%</button>
+          <button type="button" class="preset-chip" (click)="setDownPaymentPercent(30)">30%</button>
+          <button type="button" class="preset-chip" (click)="setDownPaymentPercent(50)">50%</button>
+        </div>
+        <div *ngIf="affordabilityErrors['downPayment']" class="calc-error">
+          {{ affordabilityErrors['downPayment'] }}
+        </div>
+      </div>
+
+      <!-- Annual Interest Rate Input -->
+      <div class="calc-group">
+        <label class="calc-label">Annual Interest Rate (%)</label>
+        <div class="input-with-symbol">
+          <span class="currency-symbol">%</span>
+          <input
+            type="number"
+            step="0.1"
+            class="calc-input"
+            [(ngModel)]="annualInterestRate"
+            (ngModelChange)="calculateAffordability()"
+            min="0"
+            max="100"
+            placeholder="e.g. 8.5"
+          />
+        </div>
+        <div class="quick-presets">
+          <button type="button" class="preset-chip" (click)="setInterestRatePreset(0)">0% (Zero-Int)</button>
+          <button type="button" class="preset-chip" (click)="setInterestRatePreset(7.5)">7.5%</button>
+          <button type="button" class="preset-chip" (click)="setInterestRatePreset(8.5)">8.5%</button>
+          <button type="button" class="preset-chip" (click)="setInterestRatePreset(9.5)">9.5%</button>
+        </div>
+        <div *ngIf="affordabilityErrors['interestRate']" class="calc-error">
+          {{ affordabilityErrors['interestRate'] }}
+        </div>
+      </div>
+
+      <!-- Loan Tenure Input -->
+      <div class="calc-group">
+        <label class="calc-label">Loan Tenure (Years)</label>
+        <div class="input-with-symbol">
+          <span class="currency-symbol">Yr</span>
+          <input
+            type="number"
+            class="calc-input"
+            [(ngModel)]="tenureYears"
+            (ngModelChange)="calculateAffordability()"
+            min="1"
+            max="40"
+            placeholder="e.g. 20"
+          />
+        </div>
+        <div class="quick-presets">
+          <button type="button" class="preset-chip" (click)="setTenurePreset(10)">10 Yrs</button>
+          <button type="button" class="preset-chip" (click)="setTenurePreset(15)">15 Yrs</button>
+          <button type="button" class="preset-chip" (click)="setTenurePreset(20)">20 Yrs</button>
+          <button type="button" class="preset-chip" (click)="setTenurePreset(30)">30 Yrs</button>
+        </div>
+        <div *ngIf="affordabilityErrors['tenure']" class="calc-error">
+          {{ affordabilityErrors['tenure'] }}
+        </div>
+      </div>
+
+      <!-- Monthly Income Input -->
+      <div class="calc-group">
+        <label class="calc-label">Monthly Net Income (₹)</label>
+        <div class="input-with-symbol">
+          <span class="currency-symbol">₹</span>
+          <input
+            type="number"
+            class="calc-input"
+            [(ngModel)]="monthlyIncome"
+            (ngModelChange)="calculateAffordability()"
+            min="1"
+            placeholder="e.g. 100000"
+          />
+        </div>
+        <div class="quick-presets">
+          <button type="button" class="preset-chip" (click)="monthlyIncome = 50000; calculateAffordability()">₹50k</button>
+          <button type="button" class="preset-chip" (click)="monthlyIncome = 100000; calculateAffordability()">₹1L</button>
+          <button type="button" class="preset-chip" (click)="monthlyIncome = 200000; calculateAffordability()">₹2L</button>
+          <button type="button" class="preset-chip" (click)="monthlyIncome = 350000; calculateAffordability()">₹3.5L</button>
+        </div>
+        <div *ngIf="affordabilityErrors['income']" class="calc-error">
+          {{ affordabilityErrors['income'] }}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Affordability Assessment Card -->
+    <div class="assessment-container" *ngIf="affordabilityStatus && !affordabilityErrors['downPayment'] && !affordabilityErrors['interestRate'] && !affordabilityErrors['tenure'] && !affordabilityErrors['income']">
+      <div class="assessment-badge-bar" [ngClass]="affordabilityClass">
+        <div class="assessment-title-wrap">
+          <span class="assessment-icon">{{ affordabilityIcon }}</span>
+          <div>
+            <div class="assessment-tag">Affordability Assessment</div>
+            <h3 class="assessment-status">{{ affordabilityStatus }}</h3>
+          </div>
+        </div>
+        <div class="ratio-badge">
+          <span class="ratio-num">{{ emiToIncomeRatio }}%</span>
+          <span class="ratio-label">EMI / Income</span>
+        </div>
+      </div>
+
+      <!-- Visual Progress Meter -->
+      <div class="ratio-progress-track">
+        <div
+          class="ratio-progress-fill"
+          [style.width.%]="emiToIncomeRatio > 100 ? 100 : emiToIncomeRatio"
+          [ngClass]="affordabilityClass"
+        ></div>
+      </div>
+      <div class="ratio-milestones">
+        <span>0%</span>
+        <span class="milestone-safe">30% (Safe)</span>
+        <span class="milestone-moderate">40% (Manageable)</span>
+        <span class="milestone-stretched">50% (High Debt)</span>
+        <span>100%+</span>
+      </div>
+
+      <!-- Advice / Guidance -->
+      <p class="assessment-advice">
+        {{ affordabilityAdvice }}
+      </p>
+
+      <!-- Key Financial Metrics Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card highlight-metric">
+          <span class="metric-label">Estimated Monthly EMI</span>
+          <span class="metric-value">₹{{ monthlyEMI | number }}</span>
+          <span class="metric-hint">Monthly payment</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Principal Loan Amount</span>
+          <span class="metric-value">₹{{ loanAmount | number }}</span>
+          <span class="metric-hint">Price minus Down Payment</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Total Interest Payable</span>
+          <span class="metric-value">₹{{ totalInterest | number }}</span>
+          <span class="metric-hint">Over {{ tenureYears }} years</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Total Loan Repayment</span>
+          <span class="metric-value">₹{{ totalRepayment | number }}</span>
+          <span class="metric-hint">Principal + Interest</span>
+        </div>
+      </div>
+
+      <div class="total-cost-banner">
+        <span>Total Estimated Outflow (Down Payment + Repayment):</span>
+        <strong>₹{{ totalCost | number }}</strong>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div *ngIf="showDeleteModal && property" class="modal-backdrop">
+    <div class="modal-dialog">
+      <h3 class="modal-title">Delete Property?</h3>
+      <p class="modal-body">
+        Are you sure you want to delete <strong>"{{ property.title }}"</strong>? This action cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button (click)="cancelDelete()" [disabled]="deleting" class="btn btn-outline">
+          Cancel
+        </button>
+        <button (click)="confirmDelete()" [disabled]="deleting" class="btn btn-danger">
+          {{ deleting ? 'Deleting...' : 'Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

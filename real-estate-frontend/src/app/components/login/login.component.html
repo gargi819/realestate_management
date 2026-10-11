@@ -1,0 +1,215 @@
+<div class="login-page-container">
+
+  <div class="login-card">
+
+    <!-- Header & Brand -->
+    <div class="login-header">
+      <div class="brand-logo">🏡</div>
+      <h1 class="login-title">Welcome to RealEstate</h1>
+      <p class="login-subtitle">
+        Sign in to manage properties, view your rental history, and access smart rent savings.
+      </p>
+    </div>
+
+    <!-- Mode Selector Tabs -->
+    <div class="tab-header">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active-tab]="activeTab === 'login'"
+        (click)="activeTab = 'login'; loginError = ''; regError = ''"
+      >
+        Sign In
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active-tab]="activeTab === 'register'"
+        (click)="activeTab = 'register'; loginError = ''; regError = ''"
+      >
+        Create Account
+      </button>
+    </div>
+
+    <!-- Success Banner -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+
+    <!-- ================= TAB 1: SIGN IN FORM ================= -->
+    <div *ngIf="activeTab === 'login'" class="form-container">
+
+      <!-- Error Alert -->
+      <div *ngIf="loginError" class="alert alert-error">
+        ⚠️ {{ loginError }}
+      </div>
+
+      <form (ngSubmit)="onLogin()" class="auth-form">
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label class="form-label" for="loginEmail">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input
+              id="loginEmail"
+              type="email"
+              class="form-input"
+              [(ngModel)]="email"
+              name="email"
+              placeholder="e.g. rahul.sharma@example.com"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label class="form-label" for="loginPass">Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input
+              id="loginPass"
+              type="password"
+              class="form-input"
+              [(ngModel)]="password"
+              name="password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-block" [disabled]="loading">
+          <span *ngIf="loading" class="spinner-small"></span>
+          {{ loading ? 'Verifying with Database...' : 'Sign In' }}
+        </button>
+
+      </form>
+
+      <!-- Quick Demo Login Helpers -->
+      <div class="demo-accounts-box">
+        <span class="demo-title">⚡ Quick 1-Click Demo Accounts:</span>
+        <div class="demo-buttons">
+          <button
+            type="button"
+            class="demo-chip"
+            (click)="fillDemoCredentials('rahul.sharma@example.com', 'password123')"
+          >
+            👤 Rahul Sharma (Tenant 1)
+          </button>
+          <button
+            type="button"
+            class="demo-chip"
+            (click)="fillDemoCredentials('priya.patel@example.com', 'password123')"
+          >
+            👤 Priya Patel (Tenant 2)
+          </button>
+        </div>
+        <p class="demo-hint">Default password for seeded accounts is: <code>password123</code></p>
+      </div>
+
+    </div>
+
+    <!-- ================= TAB 2: REGISTER FORM ================= -->
+    <div *ngIf="activeTab === 'register'" class="form-container">
+
+      <!-- Error Alert -->
+      <div *ngIf="regError" class="alert alert-error">
+        ⚠️ {{ regError }}
+      </div>
+
+      <form (ngSubmit)="onRegister()" class="auth-form">
+
+        <!-- Full Name -->
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input
+              type="text"
+              class="form-input"
+              [(ngModel)]="regName"
+              name="regName"
+              placeholder="e.g. Amit Kumar"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Email Address -->
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input
+              type="email"
+              class="form-input"
+              [(ngModel)]="regEmail"
+              name="regEmail"
+              placeholder="e.g. amit@example.com"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label">Password (Min 4 chars)</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input
+              type="password"
+              class="form-input"
+              [(ngModel)]="regPassword"
+              name="regPassword"
+              placeholder="Create a password"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Phone Number -->
+        <div class="form-group">
+          <label class="form-label">Phone Number (Optional)</label>
+          <div class="input-wrap">
+            <span class="input-icon">📞</span>
+            <input
+              type="text"
+              class="form-input"
+              [(ngModel)]="regPhone"
+              name="regPhone"
+              placeholder="e.g. +91 98765 00000"
+            />
+          </div>
+        </div>
+
+        <!-- Account Role -->
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <select [(ngModel)]="regRole" name="regRole" class="form-select">
+            <option value="TENANT">Tenant / Renter</option>
+            <option value="BUYER">Property Buyer</option>
+            <option value="OWNER">Property Owner</option>
+          </select>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-block" [disabled]="loading">
+          <span *ngIf="loading" class="spinner-small"></span>
+          {{ loading ? 'Creating Account in Database...' : 'Register & Log In' }}
+        </button>
+
+      </form>
+
+    </div>
+
+    <!-- Back to Home -->
+    <div class="login-footer">
+      <a routerLink="/" class="back-link">← Return to Homepage</a>
+    </div>
+
+  </div>
+
+</div>

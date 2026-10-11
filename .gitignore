@@ -1,0 +1,48 @@
+# ==========================================
+# Real Estate Management System .gitignore
+# ==========================================
+
+# Compiled Java & Maven
+target/
+build/
+*.class
+*.jar
+*.war
+*.ear
+
+# Eclipse IDE
+.settings/
+.project
+.classpath
+.metadata/
+bin/
+
+# IntelliJ IDEA & VSCode
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# Node & Angular Frontend
+**/node_modules/
+**/dist/
+**/.angular/
+**/.npm/
+.angular-config.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment & Secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Operating System & Log Files
+*.log
+spring-boot.log
+angular.log
+.DS_Store
+Thumbs.db
