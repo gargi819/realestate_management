@@ -12,6 +12,14 @@
         <a routerLink="/properties" routerLinkActive="active" class="nav-link">
           Properties
         </a>
+
+        <!-- Admin Dashboard Link (Only visible to Admin) -->
+        <ng-container *ngIf="authService.currentUser$ | async as u">
+          <a *ngIf="u.role === 'ADMIN'" routerLink="/admin" routerLinkActive="active" class="nav-link admin-nav-link">
+            👑 Admin Dashboard
+          </a>
+        </ng-container>
+
         <a routerLink="/rental-history" routerLinkActive="active" class="nav-link">
           My Rental History
         </a>
@@ -22,8 +30,11 @@
         <!-- Auth Section -->
         <ng-container *ngIf="authService.currentUser$ | async as user; else guestNav">
           <div class="user-pill" title="Logged in as {{ user.name }} ({{ user.role }})">
-            <span class="user-avatar">👤</span>
+            <span class="user-avatar">{{ user.role === 'ADMIN' ? '👑' : '👤' }}</span>
             <span class="user-name">{{ user.name }}</span>
+            <span class="nav-role-badge" [class.nav-role-admin]="user.role === 'ADMIN'">
+              {{ user.role }}
+            </span>
             <button type="button" class="logout-btn" (click)="authService.logout()" title="Sign Out">
               Logout
             </button>

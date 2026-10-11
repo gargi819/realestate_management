@@ -9,4 +9,5 @@ export interface Property {
   bedrooms: number;
   bathrooms: number;
   status: string;
+  ownerId?: number;
 }

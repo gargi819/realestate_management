@@ -88,12 +88,27 @@ public class AuthController {
                     .body(AuthResponse.failure("An account with this email address already exists."));
         }
 
+        String role = (request.getRole() != null && !request.getRole().trim().isEmpty())
+                ? request.getRole().trim().toUpperCase()
+                : "TENANT";
+
+        // Normal users MUST NOT register as ADMIN
+        if ("ADMIN".equals(role)) {
+            return ResponseEntity.badRequest()
+                    .body(AuthResponse.failure("Administrator registration is not permitted."));
+        }
+
+        // Validate allowed roles: TENANT (Renter), BUYER, OWNER
+        if (!"TENANT".equals(role) && !"BUYER".equals(role) && !"OWNER".equals(role)) {
+            role = "TENANT";
+        }
+
         User newUser = new User();
         newUser.setName(request.getName().trim());
         newUser.setEmail(email);
         newUser.setPassword(request.getPassword());
         newUser.setPhone(request.getPhone());
-        newUser.setRole(request.getRole() != null && !request.getRole().trim().isEmpty() ? request.getRole() : "TENANT");
+        newUser.setRole(role);
 
         User saved = userRepository.save(newUser);
 

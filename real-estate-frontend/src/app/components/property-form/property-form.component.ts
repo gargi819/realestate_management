@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PropertyService } from '../../services/property.service';
+import { AuthService } from '../../services/auth.service';
 import { Property } from '../../models/property';
 
 @Component({
@@ -16,11 +17,13 @@ export class PropertyFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private propertyService = inject(PropertyService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   propertyForm!: FormGroup;
   isEditMode = false;
   propertyId: number | null = null;
+  existingOwnerId: number | null = null;
   loading = false;
   submitting = false;
   errorMessage = '';
@@ -61,6 +64,14 @@ export class PropertyFormComponent implements OnInit {
 
     this.propertyService.getPropertyById(id).subscribe({
       next: (property: Property) => {
+        const currentUser = this.authService.getCurrentUser();
+        if (currentUser && currentUser.role !== 'ADMIN' && property.ownerId && property.ownerId !== currentUser.id) {
+          this.errorMessage = 'Access denied: You can only edit your own properties.';
+          this.loading = false;
+          this.cdr.detectChanges();
+          return;
+        }
+        this.existingOwnerId = property.ownerId || null;
         this.propertyForm.patchValue(property);
         this.loading = false;
         this.cdr.detectChanges();
@@ -90,8 +101,12 @@ export class PropertyFormComponent implements OnInit {
     this.errorMessage = '';
     this.cdr.detectChanges();
     const propertyData: Property = this.propertyForm.value;
+    const currentUser = this.authService.getCurrentUser();
 
     if (this.isEditMode && this.propertyId) {
+      if (this.existingOwnerId) {
+        propertyData.ownerId = this.existingOwnerId;
+      }
       this.propertyService.updateProperty(this.propertyId, propertyData).subscribe({
         next: () => {
           this.submitting = false;
@@ -107,6 +122,9 @@ export class PropertyFormComponent implements OnInit {
         }
       });
     } else {
+      if (currentUser && currentUser.id) {
+        propertyData.ownerId = currentUser.id;
+      }
       this.propertyService.addProperty(propertyData).subscribe({
         next: () => {
           this.submitting = false;

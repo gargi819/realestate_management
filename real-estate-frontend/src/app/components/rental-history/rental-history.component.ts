@@ -54,43 +54,24 @@ export class RentalHistoryComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadTenants();
+    const user = this.authService.getCurrentUser();
+    if (user && user.id) {
+      this.currentTenant = user;
+      this.selectedTenantId = user.id;
+    } else {
+      this.currentTenant = { id: 1, name: 'Rahul Sharma', email: 'rahul.sharma@example.com', role: 'TENANT' };
+      this.selectedTenantId = 1;
+    }
+    this.loadRentalHistory(this.selectedTenantId);
     this.loadPropertiesForModal();
   }
 
-  // 1. Load registered tenants and select default logged-in tenant
   loadTenants(): void {
-    this.rentalService.getTenants().subscribe({
-      next: (data) => {
-        this.tenants = data || [];
-        if (this.tenants.length > 0) {
-          const tenant = this.tenants.find(t => t.id === this.selectedTenantId) || this.tenants[0];
-          this.selectedTenantId = tenant.id!;
-          this.currentTenant = tenant;
-          this.loadRentalHistory(this.selectedTenantId);
-        }
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error fetching tenants:', err);
-        // Fallback default tenant
-        this.currentTenant = { id: 1, name: 'Rahul Sharma', email: 'rahul.sharma@example.com', role: 'TENANT' };
-        this.loadRentalHistory(1);
-      }
-    });
+    // Deprecated for user privacy
   }
 
-  // 2. Switch Logged-in Tenant
   onTenantChange(newTenantId: number): void {
-    this.selectedTenantId = Number(newTenantId);
-    this.currentTenant = this.tenants.find(t => t.id === this.selectedTenantId) || null;
-    if (this.currentTenant) {
-      this.authService.setCurrentUser(this.currentTenant);
-    }
-    this.cheaperResponse = null;
-    this.filteredCheaperRentals = [];
-    this.hasSearchedCheaper = false;
-    this.loadRentalHistory(this.selectedTenantId);
+    // Deprecated for user privacy
   }
 
   // 3. Load Rental History for currently active tenant

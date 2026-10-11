@@ -50,6 +50,9 @@ public class PropertyService {
             existingProperty.setBedrooms(propertyDetails.getBedrooms());
             existingProperty.setBathrooms(propertyDetails.getBathrooms());
             existingProperty.setStatus(propertyDetails.getStatus());
+            if (propertyDetails.getOwnerId() != null) {
+                existingProperty.setOwnerId(propertyDetails.getOwnerId());
+            }
             return propertyRepository.save(existingProperty);
         }
         return null;
@@ -77,5 +80,10 @@ public class PropertyService {
     // 8. Filter properties by status (case-insensitive)
     public List<Property> filterByStatus(String status) {
         return propertyRepository.findByStatusIgnoreCase(status);
+    }
+
+    // 9. Retrieve properties by owner ID
+    public List<Property> getPropertiesByOwnerId(Long ownerId) {
+        return propertyRepository.findByOwnerId(ownerId);
     }
 }

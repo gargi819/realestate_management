@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { PropertyService } from '../../services/property.service';
+import { AuthService } from '../../services/auth.service';
 import { Property } from '../../models/property';
 
 @Component({
@@ -13,12 +14,16 @@ import { Property } from '../../models/property';
 })
 export class PropertyListComponent implements OnInit {
   private propertyService = inject(PropertyService);
+  public authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   // Master copy of all properties fetched from server
   allProperties: Property[] = [];
   // Filtered properties currently displayed on screen
   properties: Property[] = [];
+
+  // Tab filter: 'all' vs 'my'
+  viewFilter: 'all' | 'my' = 'all';
 
   loading = false;
   errorMessage = '';
@@ -91,6 +96,14 @@ export class PropertyListComponent implements OnInit {
       );
     }
 
+    // View filter: My Properties
+    if (this.viewFilter === 'my') {
+      const user = this.authService.getCurrentUser();
+      if (user) {
+        result = result.filter((prop) => prop.ownerId === user.id);
+      }
+    }
+
     this.properties = result;
     this.cdr.detectChanges();
   }
@@ -110,11 +123,42 @@ export class PropertyListComponent implements OnInit {
     this.applyCombinedFilters();
   }
 
+  // Tab switch helper
+  setViewFilter(filter: 'all' | 'my'): void {
+    this.viewFilter = filter;
+    this.applyCombinedFilters();
+  }
+
+  // Ownership and Permission helpers
+  canManageProperty(property: Property): boolean {
+    const user = this.authService.getCurrentUser();
+    if (!user) return false;
+    if (user.role === 'ADMIN') return true;
+    return property.ownerId === user.id;
+  }
+
+  isMyProperty(property: Property): boolean {
+    const user = this.authService.getCurrentUser();
+    return !!(user && property.ownerId === user.id);
+  }
+
+  isOwnerOrAdmin(): boolean {
+    const user = this.authService.getCurrentUser();
+    return !!(user && (user.role === 'OWNER' || user.role === 'ADMIN'));
+  }
+
+  getMyPropertiesCount(): number {
+    const user = this.authService.getCurrentUser();
+    if (!user) return 0;
+    return this.allProperties.filter((p) => p.ownerId === user.id).length;
+  }
+
   // 5. Clear all filters & search
   clearFilters(): void {
     this.searchLocation = '';
     this.selectedPropertyType = '';
     this.selectedStatus = '';
+    this.viewFilter = 'all';
     this.errorMessage = '';
     this.properties = [...this.allProperties];
     this.cdr.detectChanges();

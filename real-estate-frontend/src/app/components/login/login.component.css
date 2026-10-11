@@ -254,6 +254,19 @@
   color: #2563eb;
 }
 
+.demo-chip-admin {
+  background: #fefce8;
+  border-color: #fde047;
+  color: #854d0e;
+  font-weight: 700;
+}
+
+.demo-chip-admin:hover {
+  background: #fef08a;
+  border-color: #eab308;
+  color: #713f12;
+}
+
 .demo-hint {
   font-size: 0.78rem;
   color: #64748b;

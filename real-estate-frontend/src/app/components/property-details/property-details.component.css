@@ -41,11 +41,62 @@
   gap: 10px;
 }
 
+.price-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.price-type-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #64748b;
+  background-color: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
 .property-price {
   font-size: 2.1rem;
   font-weight: 800;
   color: #16a34a;
   white-space: nowrap;
+}
+
+.property-price.rent-price {
+  color: #0284c7;
+}
+
+.price-period {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.highlight-price-row {
+  background-color: #f0fdf4 !important;
+  border-left: 3px solid #16a34a;
+}
+
+.price-highlight {
+  font-weight: 700;
+  color: #15803d;
+  font-size: 1.05rem;
+}
+
+.btn-rent-compare {
+  background-color: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.btn-rent-compare:hover {
+  background-color: #0284c7;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 /* Badges */

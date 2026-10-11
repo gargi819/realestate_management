@@ -127,19 +127,28 @@
 
         <div class="form-row">
           <div class="form-field col">
-            <label for="price" class="field-label">Price (₹) *</label>
+            <label for="price" class="field-label">
+              {{ propertyForm.get('status')?.value === 'For Rent' ? 'Monthly Rent Price (₹/month) *' : 'Selling Price (₹) *' }}
+            </label>
             <input
               id="price"
               name="price"
               type="number"
               formControlName="price"
-              placeholder="e.g. 7500000"
+              [placeholder]="propertyForm.get('status')?.value === 'For Rent' ? 'e.g. 25000' : 'e.g. 7500000'"
               class="field-input"
               [class.invalid]="propertyForm.get('price')?.invalid && propertyForm.get('price')?.touched"
             />
+            <small class="field-hint" style="color: #64748b; font-size: 0.8rem; margin-top: 4px; display: block;">
+              {{ propertyForm.get('status')?.value === 'For Rent' ? 'Specify the monthly rental rate expected from tenants.' : 'Specify the total property selling price.' }}
+            </small>
             <span class="field-error" *ngIf="propertyForm.get('price')?.invalid && propertyForm.get('price')?.touched">
-              <span *ngIf="propertyForm.get('price')?.errors?.['required']">Price is required.</span>
-              <span *ngIf="propertyForm.get('price')?.errors?.['min']">Price must be greater than 0.</span>
+              <span *ngIf="propertyForm.get('price')?.errors?.['required']">
+                {{ propertyForm.get('status')?.value === 'For Rent' ? 'Monthly rent price is required.' : 'Selling price is required.' }}
+              </span>
+              <span *ngIf="propertyForm.get('price')?.errors?.['min']">
+                {{ propertyForm.get('status')?.value === 'For Rent' ? 'Monthly rent must be greater than 0.' : 'Price must be greater than 0.' }}
+              </span>
             </span>
           </div>
 

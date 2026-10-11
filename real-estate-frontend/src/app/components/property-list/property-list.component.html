@@ -6,9 +6,27 @@
       <h1 class="page-title">Available Properties</h1>
       <p class="page-subtitle">Browse and manage available properties.</p>
     </div>
-    <a routerLink="/add-property" class="btn btn-primary btn-add">
+    <a *ngIf="!authService.isLoggedIn() || isOwnerOrAdmin()" routerLink="/add-property" class="btn btn-primary btn-add">
       + Add Property
     </a>
+  </div>
+
+  <!-- Role-based Property View Switcher for Owners and Admins -->
+  <div *ngIf="authService.isLoggedIn() && isOwnerOrAdmin()" class="view-tabs-container">
+    <button 
+      type="button"
+      (click)="setViewFilter('all')" 
+      class="view-tab-btn" 
+      [class.active]="viewFilter === 'all'">
+      🌐 All Properties ({{ allProperties.length }})
+    </button>
+    <button 
+      type="button"
+      (click)="setViewFilter('my')" 
+      class="view-tab-btn" 
+      [class.active]="viewFilter === 'my'">
+      🏡 My Properties ({{ getMyPropertiesCount() }})
+    </button>
   </div>
 
   <!-- Search & Filter Controls -->
@@ -85,7 +103,10 @@
       
       <!-- Card Header: Title & Status -->
       <div class="card-header">
-        <h2 class="card-title">{{ prop.title }}</h2>
+        <div>
+          <h2 class="card-title">{{ prop.title }}</h2>
+          <span *ngIf="isMyProperty(prop)" class="badge-owner-tag">👤 My Property</span>
+        </div>
         <span class="badge" [ngClass]="'badge-' + prop.status.toLowerCase().replaceAll(' ', '-')">
           {{ prop.status }}
         </span>
@@ -95,8 +116,10 @@
       <p class="card-location">📍 {{ prop.location }}</p>
 
       <!-- Price -->
-      <div class="card-price">
+      <div class="card-price" [class.card-price-rent]="prop.status === 'For Rent'">
+        <span *ngIf="prop.status === 'For Rent'" class="card-price-type">Rent: </span>
         ₹{{ prop.price | number }}
+        <span *ngIf="prop.status === 'For Rent'" class="card-price-period">/mo</span>
       </div>
 
       <!-- Specs & Details -->
@@ -114,10 +137,10 @@
         <a [routerLink]="['/properties', prop.id]" class="btn btn-card btn-view">
           View Details
         </a>
-        <a [routerLink]="['/edit-property', prop.id]" class="btn btn-card btn-edit">
+        <a *ngIf="canManageProperty(prop)" [routerLink]="['/edit-property', prop.id]" class="btn btn-card btn-edit">
           Edit
         </a>
-        <button (click)="openDeleteModal(prop)" class="btn btn-card btn-delete">
+        <button *ngIf="canManageProperty(prop)" (click)="openDeleteModal(prop)" class="btn btn-card btn-delete">
           Delete
         </button>
       </div>

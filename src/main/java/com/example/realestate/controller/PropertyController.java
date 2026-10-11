@@ -96,4 +96,11 @@ public class PropertyController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    // 9. GET /api/properties/owner/{ownerId} - Retrieve properties listed by an owner
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<List<Property>> getPropertiesByOwner(@PathVariable Long ownerId) {
+        List<Property> properties = propertyService.getPropertiesByOwnerId(ownerId);
+        return ResponseEntity.ok(properties);
+    }
 }

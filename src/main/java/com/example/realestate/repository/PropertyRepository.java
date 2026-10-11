@@ -21,4 +21,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     // 3. Filter by status (case-insensitive exact match)
     List<Property> findByStatusIgnoreCase(String status);
+
+    // 4. Retrieve properties listed by a specific owner
+    List<Property> findByOwnerId(Long ownerId);
 }

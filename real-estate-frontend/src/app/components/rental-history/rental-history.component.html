@@ -9,29 +9,16 @@
       </p>
     </div>
 
-    <!-- Tenant Account / Login Profile Switcher -->
+    <!-- Logged In Account Profile Card -->
     <div class="tenant-login-card">
       <div class="tenant-avatar">👤</div>
       <div class="tenant-details">
-        <span class="tenant-badge">Current Tenant Session</span>
-        <div class="tenant-name">{{ currentTenant?.name || 'Tenant' }}</div>
+        <span class="tenant-badge">My Account</span>
+        <div class="tenant-name">{{ currentTenant?.name || 'User' }}</div>
         <div class="tenant-email">{{ currentTenant?.email }}</div>
-      </div>
-      <div class="tenant-switcher">
-        <label for="tenantSelect" class="switcher-label">Switch Tenant:</label>
-        <select
-          id="tenantSelect"
-          class="tenant-select"
-          [ngModel]="selectedTenantId"
-          (ngModelChange)="onTenantChange($event)"
-        >
-          <option *ngFor="let t of tenants" [value]="t.id">
-            {{ t.name }} (ID: {{ t.id }})
-          </option>
-        </select>
-        <div style="margin-top: 6px; font-size: 0.8rem;">
-          <a routerLink="/login" style="color: #2563eb; text-decoration: underline;">🔑 Login / Register Page</a>
-        </div>
+        <span class="role-badge" [class.badge-admin]="currentTenant?.role === 'ADMIN'">
+          {{ currentTenant?.role || 'TENANT' }}
+        </span>
       </div>
     </div>
   </div>

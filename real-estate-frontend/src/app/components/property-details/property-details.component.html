@@ -31,7 +31,12 @@
         <p class="property-location">📍 {{ property.location }}</p>
       </div>
       <div class="hero-right">
-        <div class="property-price">₹{{ property.price | number }}</div>
+        <div class="price-container">
+          <span class="price-type-tag">{{ property.status === 'For Rent' ? 'Rent Price' : 'Selling Price' }}</span>
+          <div class="property-price" [class.rent-price]="property.status === 'For Rent'">
+            ₹{{ property.price | number }}<span *ngIf="property.status === 'For Rent'" class="price-period"> / month</span>
+          </div>
+        </div>
         <span class="badge" [ngClass]="'badge-' + property.status.toLowerCase().replaceAll(' ', '-')">
           {{ property.status }}
         </span>
@@ -64,6 +69,12 @@
           <span class="info-key">Status</span>
           <span class="info-val">{{ property.status }}</span>
         </div>
+        <div class="info-row highlight-price-row">
+          <span class="info-key">{{ property.status === 'For Rent' ? 'Monthly Rent' : 'Selling Price' }}</span>
+          <span class="info-val price-highlight">
+            ₹{{ property.price | number }}{{ property.status === 'For Rent' ? ' / month' : '' }}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -79,13 +90,17 @@
 
     <!-- Actions -->
     <div class="details-actions">
-      <button (click)="toggleAffordability()" class="btn btn-affordability">
+      <!-- Affordability Checker only for purchase / sale listings -->
+      <button *ngIf="property.status !== 'For Rent'" (click)="toggleAffordability()" class="btn btn-affordability">
         {{ showAffordability ? '✕ Hide Affordability Checker' : '🧮 Check Affordability' }}
       </button>
-      <a [routerLink]="['/edit-property', property.id]" class="btn btn-edit">
+      <a *ngIf="property.status === 'For Rent'" routerLink="/rental-history" class="btn btn-rent-compare">
+        📊 Compare Market Rentals
+      </a>
+      <a *ngIf="canManageProperty()" [routerLink]="['/edit-property', property.id]" class="btn btn-edit">
         Edit Property
       </a>
-      <button (click)="openDeleteModal()" class="btn btn-delete">
+      <button *ngIf="canManageProperty()" (click)="openDeleteModal()" class="btn btn-delete">
         Delete Property
       </button>
       <a routerLink="/properties" class="btn btn-back">
@@ -95,8 +110,8 @@
 
   </div>
 
-  <!-- FEATURE 1: Property Affordability Checker Section -->
-  <div *ngIf="!loading && property && showAffordability" class="card affordability-card" id="affordability-section">
+  <!-- FEATURE 1: Property Affordability Checker Section (Purchase only) -->
+  <div *ngIf="!loading && property && showAffordability && property.status !== 'For Rent'" class="card affordability-card" id="affordability-section">
     <div class="affordability-header">
       <div class="header-icon">🧮</div>
       <div>

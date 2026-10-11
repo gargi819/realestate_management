@@ -1,0 +1,355 @@
+<div class="admin-page-container">
+
+  <!-- Access Denied Banner if not logged in as Admin -->
+  <div *ngIf="!isAdmin" class="access-denied-card">
+    <div class="denied-icon">🔒</div>
+    <h2>Admin Access Only</h2>
+    <p>This portal is exclusively reserved for the platform Administrator.</p>
+    <p>Please log in using your Admin credentials.</p>
+    <a routerLink="/login" class="btn btn-primary" style="margin-top: 16px;">
+      🔑 Go to Login
+    </a>
+  </div>
+
+  <div *ngIf="isAdmin">
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+      <div>
+        <div class="admin-pill">👑 Administrator Portal</div>
+        <h1 class="dashboard-title">Platform Admin Dashboard</h1>
+        <p class="dashboard-subtitle">
+          Manage all registered users, monitor platform activity, and inspect individual user profiles.
+        </p>
+      </div>
+      <div class="header-actions">
+        <button (click)="loadDashboardData()" class="btn btn-refresh" [disabled]="loading">
+          🔄 Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Error Alert -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Stats Overview Cards -->
+    <div class="stats-grid" *ngIf="stats">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats.totalUsers }}</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🏢</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats.totalProperties }}</div>
+          <div class="stat-label">Properties Listed</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🔑</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats.totalRenters }}</div>
+          <div class="stat-label">Renters (Tenants)</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">🏡</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats.totalOwners }}</div>
+          <div class="stat-label">Property Owners</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">💼</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats.totalBuyers }}</div>
+          <div class="stat-label">Property Buyers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Registered Users Directory -->
+    <div class="section-card">
+
+      <div class="table-header-controls">
+        <h2 class="section-heading">📋 Registered Users Directory</h2>
+
+        <!-- Role Filter Tabs -->
+        <div class="role-filters">
+          <button
+            type="button"
+            class="filter-tab"
+            [class.active-tab]="selectedRoleFilter === 'ALL'"
+            (click)="setRoleFilter('ALL')"
+          >
+            All ({{ users.length }})
+          </button>
+          <button
+            type="button"
+            class="filter-tab"
+            [class.active-tab]="selectedRoleFilter === 'TENANT'"
+            (click)="setRoleFilter('TENANT')"
+          >
+            Renters
+          </button>
+          <button
+            type="button"
+            class="filter-tab"
+            [class.active-tab]="selectedRoleFilter === 'OWNER'"
+            (click)="setRoleFilter('OWNER')"
+          >
+            Owners
+          </button>
+          <button
+            type="button"
+            class="filter-tab"
+            [class.active-tab]="selectedRoleFilter === 'BUYER'"
+            (click)="setRoleFilter('BUYER')"
+          >
+            Buyers
+          </button>
+          <button
+            type="button"
+            class="filter-tab"
+            [class.active-tab]="selectedRoleFilter === 'ADMIN'"
+            (click)="setRoleFilter('ADMIN')"
+          >
+            Admins
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-wrap">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search by name, email, phone..."
+            [(ngModel)]="searchTerm"
+            (input)="onSearch()"
+          />
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="state-container">
+        <div class="spinner"></div>
+        <p>Loading registered users...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading && filteredUsers.length === 0" class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No Users Found</h3>
+        <p>No user matches your selected filter or search term.</p>
+      </div>
+
+      <!-- Users Table -->
+      <div class="table-responsive" *ngIf="!loading && filteredUsers.length > 0">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Platform Activity</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of filteredUsers" class="user-row">
+              <td class="col-id">#{{ u.id }}</td>
+              <td class="col-name">
+                <strong>{{ u.name }}</strong>
+                <span *ngIf="u.role === 'ADMIN'" class="crown-tag">👑 Exclusive</span>
+              </td>
+              <td class="col-email">{{ u.email }}</td>
+              <td class="col-phone">{{ u.phone || '—' }}</td>
+              <td>
+                <span class="role-pill" [ngClass]="'role-' + u.role.toLowerCase()">
+                  {{ u.role }}
+                </span>
+              </td>
+              <td class="col-activity">
+                <span *ngIf="u.role === 'OWNER'" class="activity-badge">
+                  🏢 {{ u.propertyCount }} Properties Listed
+                </span>
+                <span *ngIf="u.role === 'TENANT'" class="activity-badge">
+                  📑 {{ u.rentalCount }} Rental Contracts
+                </span>
+                <span *ngIf="u.role === 'BUYER'" class="activity-badge">
+                  🎯 Buyer Profile
+                </span>
+                <span *ngIf="u.role === 'ADMIN'" class="activity-badge">
+                  🛡️ Full Control
+                </span>
+              </td>
+              <td style="text-align: right;">
+                <button
+                  type="button"
+                  class="btn btn-details"
+                  (click)="openUserDetails(u.id)"
+                  title="View individual details for this user"
+                >
+                  👁️ View Details
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ================= INDIVIDUAL USER DETAILS MODAL ================= -->
+  <div *ngIf="showDetailsModal" class="modal-overlay" (click)="closeUserDetails()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="modal-user-identity">
+          <div class="user-avatar-lg">👤</div>
+          <div>
+            <h2 class="modal-title">{{ selectedUser?.name || 'User Profile' }}</h2>
+            <div class="modal-sub">
+              <span class="role-pill" [ngClass]="'role-' + selectedUser?.role?.toLowerCase()">
+                {{ selectedUser?.role }}
+              </span>
+              <span class="user-id-tag">User ID: #{{ selectedUser?.id }}</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="modal-close" (click)="closeUserDetails()">✕</button>
+      </div>
+
+      <!-- Loading Details Spinner -->
+      <div *ngIf="loadingDetails" class="state-container" style="padding: 40px 0;">
+        <div class="spinner"></div>
+        <p>Loading user details...</p>
+      </div>
+
+      <!-- Details Error -->
+      <div *ngIf="detailsError" class="alert alert-error">
+        {{ detailsError }}
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body" *ngIf="!loadingDetails && selectedUser">
+
+        <!-- 1. Profile Information Section -->
+        <div class="detail-section">
+          <h3 class="section-sub-title">📌 Personal & Contact Information</h3>
+          <div class="profile-grid">
+            <div class="profile-item">
+              <span class="p-label">Full Name:</span>
+              <span class="p-val">{{ selectedUser.name }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="p-label">Email Address:</span>
+              <span class="p-val">{{ selectedUser.email }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="p-label">Phone Number:</span>
+              <span class="p-val">{{ selectedUser.phone || 'Not provided' }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="p-label">Account Role:</span>
+              <span class="p-val font-semibold">{{ selectedUser.role }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Property Owner: Listed Properties Section -->
+        <div class="detail-section" *ngIf="selectedUser.role === 'OWNER' || selectedUser.properties.length > 0">
+          <div class="section-header-row">
+            <h3 class="section-sub-title">🏢 Properties Listed by this Owner ({{ selectedUser.properties.length }})</h3>
+          </div>
+
+          <div *ngIf="selectedUser.properties.length === 0" class="empty-sub-card">
+            No properties currently listed by this owner.
+          </div>
+
+          <div *ngIf="selectedUser.properties.length > 0" class="props-mini-list">
+            <div *ngFor="let prop of selectedUser.properties" class="prop-mini-item">
+              <div class="prop-mini-header">
+                <span class="prop-mini-title">{{ prop.title }}</span>
+                <span class="badge" [ngClass]="'badge-' + prop.status.toLowerCase().replaceAll(' ', '-')">
+                  {{ prop.status }}
+                </span>
+              </div>
+              <div class="prop-mini-meta">
+                <span>📍 {{ prop.location }}</span> &bull;
+                <span>{{ prop.propertyType }}</span> &bull;
+                <span>{{ prop.area }} sq.ft</span>
+              </div>
+              <div class="prop-mini-footer">
+                <span class="prop-mini-price">
+                  {{ prop.status === 'For Rent' ? 'Rent: ₹' + (prop.price | number) + ' / mo' : '₹' + (prop.price | number) }}
+                </span>
+                <a [routerLink]="['/properties', prop.id]" (click)="closeUserDetails()" class="btn-link">
+                  View Property Page →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Renter: Rental History Contracts Section -->
+        <div class="detail-section" *ngIf="selectedUser.role === 'TENANT' || selectedUser.rentalHistory.length > 0">
+          <div class="section-header-row">
+            <h3 class="section-sub-title">📑 Rental History Records ({{ selectedUser.rentalHistory.length }})</h3>
+          </div>
+
+          <div *ngIf="selectedUser.rentalHistory.length === 0" class="empty-sub-card">
+            No rental records on file for this tenant.
+          </div>
+
+          <div *ngIf="selectedUser.rentalHistory.length > 0" class="rental-mini-list">
+            <div *ngFor="let record of selectedUser.rentalHistory" class="rental-mini-item">
+              <div class="rental-mini-title">
+                🏠 {{ record.property.title || 'Rental Property #' + record.id }}
+              </div>
+              <div class="rental-mini-meta">
+                <span>📍 {{ record.property.location || 'Location Not Specified' }}</span>
+              </div>
+              <div class="rental-mini-dates">
+                <span>Monthly Rent: <strong>₹{{ record.monthlyRent | number }} / mo</strong></span> &bull;
+                <span>Lease: {{ record.startDate | date:'mediumDate' }} — {{ record.endDate ? (record.endDate | date:'mediumDate') : 'Present' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Buyer Section -->
+        <div class="detail-section" *ngIf="selectedUser.role === 'BUYER'">
+          <h3 class="section-sub-title">🎯 Buyer Profile Overview</h3>
+          <p class="buyer-note">
+            This account is registered as a Property Buyer. Buyers can explore listings, calculate EMI mortgages with the Affordability Checker, and make inquiries.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeUserDetails()">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

@@ -94,20 +94,33 @@
         <div class="demo-buttons">
           <button
             type="button"
-            class="demo-chip"
-            (click)="fillDemoCredentials('rahul.sharma@example.com', 'password123')"
+            class="demo-chip demo-chip-admin"
+            (click)="fillDemoCredentials('admin@realestate.com', 'admin123')"
           >
-            👤 Rahul Sharma (Tenant 1)
+            👑 System Admin
           </button>
           <button
             type="button"
             class="demo-chip"
-            (click)="fillDemoCredentials('priya.patel@example.com', 'password123')"
+            (click)="fillDemoCredentials('srushtipatil0807@gmail.com', 'srusthi1234')"
           >
-            👤 Priya Patel (Tenant 2)
+            🏢 Owner (Srushti Patil)
+          </button>
+          <button
+            type="button"
+            class="demo-chip"
+            (click)="fillDemoCredentials('rahul.sharma@example.com', 'password123')"
+          >
+            🏠 Renter (Rahul Sharma)
+          </button>
+          <button
+            type="button"
+            class="demo-chip"
+            (click)="fillDemoCredentials('satregargi19@gmail.com', 'gargi123')"
+          >
+            💼 Buyer (Gargi)
           </button>
         </div>
-        <p class="demo-hint">Default password for seeded accounts is: <code>password123</code></p>
       </div>
 
     </div>

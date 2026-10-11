@@ -40,6 +40,9 @@ public class Property {
 
     private String status;
 
+    @Column(name = "owner_id")
+    private Long ownerId;
+
     // Default No-Argument Constructor (Required by JPA/Hibernate)
     public Property() {
     }
@@ -137,6 +140,14 @@ public class Property {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
     }
 
     @Override

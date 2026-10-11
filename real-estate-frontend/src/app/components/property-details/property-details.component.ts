@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PropertyService } from '../../services/property.service';
+import { AuthService } from '../../services/auth.service';
 import { Property } from '../../models/property';
 
 @Component({
@@ -15,6 +16,7 @@ export class PropertyDetailsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private propertyService = inject(PropertyService);
+  public authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   property: Property | null = null;
@@ -86,6 +88,14 @@ export class PropertyDetailsComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  // Check if current user is Admin or the Property Owner
+  canManageProperty(): boolean {
+    const user = this.authService.getCurrentUser();
+    if (!user || !this.property) return false;
+    if (user.role === 'ADMIN') return true;
+    return this.property.ownerId === user.id;
   }
 
   // Toggle Affordability Section

@@ -5,10 +5,12 @@ import { PropertyDetailsComponent } from './components/property-details/property
 import { PropertyFormComponent } from './components/property-form/property-form.component';
 import { RentalHistoryComponent } from './components/rental-history/rental-history.component';
 import { LoginComponent } from './components/login/login.component';
+import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'admin', component: AdminDashboardComponent },
   { path: 'properties', component: PropertyListComponent },
   { path: 'properties/:id', component: PropertyDetailsComponent },
   { path: 'rental-history', component: RentalHistoryComponent },
