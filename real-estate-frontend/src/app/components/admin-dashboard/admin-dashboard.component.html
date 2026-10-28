@@ -19,198 +19,680 @@
         <div class="admin-pill">👑 Administrator Portal</div>
         <h1 class="dashboard-title">Platform Admin Dashboard</h1>
         <p class="dashboard-subtitle">
-          Manage all registered users, monitor platform activity, and inspect individual user profiles.
+          Manage platform properties, inspect registered users and activities, and monitor rental contracts.
         </p>
       </div>
       <div class="header-actions">
-        <button (click)="loadDashboardData()" class="btn btn-refresh" [disabled]="loading">
-          🔄 Refresh
+        <button (click)="loadAllData()" class="btn btn-refresh" [disabled]="loadingStats || loadingUsers || loadingProperties || loadingRentals">
+          🔄 Refresh All Data
         </button>
       </div>
     </div>
 
+    <!-- Global Toast Alert -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      ✓ {{ successMessage }}
+    </div>
+
     <!-- Error Alert -->
     <div *ngIf="errorMessage" class="alert alert-error">
-      {{ errorMessage }}
+      ⚠️ {{ errorMessage }}
     </div>
 
-    <!-- Stats Overview Cards -->
-    <div class="stats-grid" *ngIf="stats">
-      <div class="stat-card">
-        <div class="stat-icon">👥</div>
-        <div class="stat-info">
-          <div class="stat-value">{{ stats.totalUsers }}</div>
-          <div class="stat-label">Total Users</div>
-        </div>
-      </div>
+    <!-- MAIN DASHBOARD NAVIGATION TABS -->
+    <div class="dashboard-tabs-bar">
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active-nav-tab]="activeTab === 'overview'"
+        (click)="setActiveTab('overview')"
+      >
+        📊 Overview
+      </button>
 
-      <div class="stat-card">
-        <div class="stat-icon">🏢</div>
-        <div class="stat-info">
-          <div class="stat-value">{{ stats.totalProperties }}</div>
-          <div class="stat-label">Properties Listed</div>
-        </div>
-      </div>
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active-nav-tab]="activeTab === 'properties'"
+        (click)="setActiveTab('properties')"
+      >
+        🏢 All Properties
+        <span class="tab-counter">{{ properties.length }}</span>
+      </button>
 
-      <div class="stat-card">
-        <div class="stat-icon">🔑</div>
-        <div class="stat-info">
-          <div class="stat-value">{{ stats.totalRenters }}</div>
-          <div class="stat-label">Renters (Tenants)</div>
-        </div>
-      </div>
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active-nav-tab]="activeTab === 'users'"
+        (click)="setActiveTab('users')"
+      >
+        👥 Registered Users
+        <span class="tab-counter">{{ users.length }}</span>
+      </button>
 
-      <div class="stat-card">
-        <div class="stat-info">🏡</div>
-        <div class="stat-info">
-          <div class="stat-value">{{ stats.totalOwners }}</div>
-          <div class="stat-label">Property Owners</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">💼</div>
-        <div class="stat-info">
-          <div class="stat-value">{{ stats.totalBuyers }}</div>
-          <div class="stat-label">Property Buyers</div>
-        </div>
-      </div>
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active-nav-tab]="activeTab === 'rentals'"
+        (click)="setActiveTab('rentals')"
+      >
+        📑 Rental Activity
+        <span class="tab-counter">{{ rentalContracts.length }}</span>
+      </button>
     </div>
 
-    <!-- Section: Registered Users Directory -->
-    <div class="section-card">
+    <!-- ================= TAB 1: OVERVIEW ================= -->
+    <div *ngIf="activeTab === 'overview'" class="tab-content-panel">
 
-      <div class="table-header-controls">
-        <h2 class="section-heading">📋 Registered Users Directory</h2>
+      <!-- Stats Grid (Interactive: Clicking jumps to filtered tab) -->
+      <div class="stats-grid" *ngIf="stats">
 
-        <!-- Role Filter Tabs -->
-        <div class="role-filters">
-          <button
-            type="button"
-            class="filter-tab"
-            [class.active-tab]="selectedRoleFilter === 'ALL'"
-            (click)="setRoleFilter('ALL')"
-          >
-            All ({{ users.length }})
-          </button>
-          <button
-            type="button"
-            class="filter-tab"
-            [class.active-tab]="selectedRoleFilter === 'TENANT'"
-            (click)="setRoleFilter('TENANT')"
-          >
-            Renters
-          </button>
-          <button
-            type="button"
-            class="filter-tab"
-            [class.active-tab]="selectedRoleFilter === 'OWNER'"
-            (click)="setRoleFilter('OWNER')"
-          >
-            Owners
-          </button>
-          <button
-            type="button"
-            class="filter-tab"
-            [class.active-tab]="selectedRoleFilter === 'BUYER'"
-            (click)="setRoleFilter('BUYER')"
-          >
-            Buyers
-          </button>
-          <button
-            type="button"
-            class="filter-tab"
-            [class.active-tab]="selectedRoleFilter === 'ADMIN'"
-            (click)="setRoleFilter('ADMIN')"
-          >
-            Admins
-          </button>
+        <!-- 1. Total Regular Users -->
+        <div class="stat-card clickable-stat" (click)="setActiveTab('users', 'ALL')" title="Click to view all regular users">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.totalUsers }}</div>
+            <div class="stat-label">Total Regular Users</div>
+            <div class="stat-hint">Excludes Admin accounts &rarr;</div>
+          </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="search-wrap">
-          <input
-            type="text"
-            class="search-input"
-            placeholder="Search by name, email, phone..."
-            [(ngModel)]="searchTerm"
-            (input)="onSearch()"
-          />
+        <!-- 2. Total Properties Listed -->
+        <div class="stat-card clickable-stat" (click)="setActiveTab('properties')" title="Click to manage all properties">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.totalProperties }}</div>
+            <div class="stat-label">Total Properties</div>
+            <div class="stat-hint">Across all owners &rarr;</div>
+          </div>
         </div>
+
+        <!-- 3. Total Tenants -->
+        <div class="stat-card clickable-stat" (click)="setActiveTab('users', 'TENANT')" title="Click to view tenants">
+          <div class="stat-icon">🔑</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.totalRenters }}</div>
+            <div class="stat-label">Total Tenants</div>
+            <div class="stat-hint">Registered renters &rarr;</div>
+          </div>
+        </div>
+
+        <!-- 4. Total Property Owners -->
+        <div class="stat-card clickable-stat" (click)="setActiveTab('users', 'OWNER')" title="Click to view owners">
+          <div class="stat-icon">🏡</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.totalOwners }}</div>
+            <div class="stat-label">Property Owners</div>
+            <div class="stat-hint">Listed landlords &rarr;</div>
+          </div>
+        </div>
+
+        <!-- 5. Total Buyers -->
+        <div class="stat-card clickable-stat" (click)="setActiveTab('users', 'BUYER')" title="Click to view buyers">
+          <div class="stat-icon">💼</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.totalBuyers }}</div>
+            <div class="stat-label">Property Buyers</div>
+            <div class="stat-hint">Registered buyers &rarr;</div>
+          </div>
+        </div>
+
+        <!-- 6. Total Rental Contracts -->
+        <div class="stat-card clickable-stat" (click)="setActiveTab('rentals')" title="Click to view rental activity">
+          <div class="stat-icon">📑</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.totalRentalContracts }}</div>
+            <div class="stat-label">Rental Contracts</div>
+            <div class="stat-hint">All lease records &rarr;</div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Loading State -->
-      <div *ngIf="loading" class="state-container">
-        <div class="spinner"></div>
-        <p>Loading registered users...</p>
-      </div>
+      <!-- Quick Highlights Grid -->
+      <div class="overview-highlights-grid">
 
-      <!-- Empty State -->
-      <div *ngIf="!loading && filteredUsers.length === 0" class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <h3>No Users Found</h3>
-        <p>No user matches your selected filter or search term.</p>
-      </div>
+        <!-- Recent Properties Preview -->
+        <div class="section-card highlight-card">
+          <div class="highlight-header">
+            <div>
+              <h2 class="section-heading">🏢 Recent Properties</h2>
+              <p class="section-subtext">Latest listings added by property owners.</p>
+            </div>
+            <button (click)="setActiveTab('properties')" class="btn btn-outline btn-sm">
+              Manage All ({{ properties.length }}) &rarr;
+            </button>
+          </div>
 
-      <!-- Users Table -->
-      <div class="table-responsive" *ngIf="!loading && filteredUsers.length > 0">
-        <table class="users-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Role</th>
-              <th>Platform Activity</th>
-              <th style="text-align: right;">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let u of filteredUsers" class="user-row">
-              <td class="col-id">#{{ u.id }}</td>
-              <td class="col-name">
-                <strong>{{ u.name }}</strong>
-                <span *ngIf="u.role === 'ADMIN'" class="crown-tag">👑 Exclusive</span>
-              </td>
-              <td class="col-email">{{ u.email }}</td>
-              <td class="col-phone">{{ u.phone || '—' }}</td>
-              <td>
-                <span class="role-pill" [ngClass]="'role-' + u.role.toLowerCase()">
-                  {{ u.role }}
+          <div *ngIf="properties.length === 0" class="empty-state">
+            <p>No properties listed on the platform yet.</p>
+          </div>
+
+          <div class="quick-items-list" *ngIf="properties.length > 0">
+            <div *ngFor="let p of properties.slice(0, 4)" class="quick-item-row">
+              <div class="quick-item-left">
+                <span class="quick-item-title">{{ p.title }}</span>
+                <span class="quick-item-meta">
+                  📍 {{ p.location }} &bull;
+                  <span class="owner-pill">By: {{ p.ownerName || 'Platform' }}</span>
                 </span>
-              </td>
-              <td class="col-activity">
-                <span *ngIf="u.role === 'OWNER'" class="activity-badge">
-                  🏢 {{ u.propertyCount }} Properties Listed
+              </div>
+              <div class="quick-item-right">
+                <span class="quick-price">
+                  {{ p.status === 'For Rent' ? '₹' + (p.price | number) + ' / mo' : '₹' + (p.price | number) }}
                 </span>
-                <span *ngIf="u.role === 'TENANT'" class="activity-badge">
-                  📑 {{ u.rentalCount }} Rental Contracts
+                <span class="badge" [ngClass]="'badge-' + p.status.toLowerCase().replaceAll(' ', '-')">
+                  {{ p.status }}
                 </span>
-                <span *ngIf="u.role === 'BUYER'" class="activity-badge">
-                  🎯 Buyer Profile
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Rental Leases Preview -->
+        <div class="section-card highlight-card">
+          <div class="highlight-header">
+            <div>
+              <h2 class="section-heading">📑 Recent Rental Leases</h2>
+              <p class="section-subtext">Recent rental agreements recorded by tenants.</p>
+            </div>
+            <button (click)="setActiveTab('rentals')" class="btn btn-outline btn-sm">
+              View All Leases ({{ rentalContracts.length }}) &rarr;
+            </button>
+          </div>
+
+          <div *ngIf="rentalContracts.length === 0" class="empty-state">
+            <p>No rental contracts recorded on the platform yet.</p>
+          </div>
+
+          <div class="quick-items-list" *ngIf="rentalContracts.length > 0">
+            <div *ngFor="let r of rentalContracts.slice(0, 4)" class="quick-item-row">
+              <div class="quick-item-left">
+                <span class="quick-item-title">🏠 {{ r.property.title }}</span>
+                <span class="quick-item-meta">
+                  Tenant: <strong>{{ r.tenant.name }}</strong> ({{ r.tenant.email }})
                 </span>
-                <span *ngIf="u.role === 'ADMIN'" class="activity-badge">
-                  🛡️ Full Control
+              </div>
+              <div class="quick-item-right">
+                <span class="quick-price">₹{{ r.monthlyRent | number }} / mo</span>
+                <span class="lease-status-pill" [class.lease-active]="isLeaseActive(r)">
+                  {{ isLeaseActive(r) ? 'Active' : 'Completed' }}
                 </span>
-              </td>
-              <td style="text-align: right;">
-                <button
-                  type="button"
-                  class="btn btn-details"
-                  (click)="openUserDetails(u.id)"
-                  title="View individual details for this user"
-                >
-                  👁️ View Details
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>
 
+    <!-- ================= TAB 2: ALL PROPERTIES ================= -->
+    <div *ngIf="activeTab === 'properties'" class="tab-content-panel">
+
+      <div class="section-card">
+
+        <div class="section-card-header">
+          <div>
+            <h2 class="section-heading">🏢 Manage All Platform Properties</h2>
+            <p class="section-subtext">
+              Complete overview of every property listed across all owners. Search, change status, edit details, or delete listings.
+            </p>
+          </div>
+          <span class="count-badge-lg">{{ filteredProperties.length }} Properties</span>
+        </div>
+
+        <!-- Controls: Search & Filters -->
+        <div class="controls-toolbar">
+          <div class="search-wrap">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search by title, location, owner name or email..."
+              [(ngModel)]="propSearchTerm"
+              (input)="onPropSearch()"
+            />
+          </div>
+
+          <div class="filters-row">
+            <select
+              class="filter-select"
+              [(ngModel)]="propTypeFilter"
+              (change)="onPropFilterChange()"
+            >
+              <option value="">All Property Types</option>
+              <option value="Apartment">Apartment</option>
+              <option value="House">House</option>
+              <option value="Villa">Villa</option>
+              <option value="Plot">Plot</option>
+              <option value="Commercial">Commercial</option>
+            </select>
+
+            <select
+              class="filter-select"
+              [(ngModel)]="propStatusFilter"
+              (change)="onPropFilterChange()"
+            >
+              <option value="">All Statuses</option>
+              <option value="Available">Available</option>
+              <option value="Sold">Sold</option>
+              <option value="For Rent">For Rent</option>
+            </select>
+
+            <button type="button" class="btn btn-outline btn-clear" (click)="clearPropertyFilters()">
+              Clear Filters
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading Properties State -->
+        <div *ngIf="loadingProperties" class="state-container">
+          <div class="spinner"></div>
+          <p>Loading properties...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loadingProperties && filteredProperties.length === 0" class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h3>No Properties Found</h3>
+          <p>No properties match your current search criteria or filter.</p>
+          <button (click)="clearPropertyFilters()" class="btn btn-primary" style="margin-top: 10px;">
+            Reset Filters
+          </button>
+        </div>
+
+        <!-- Properties Table -->
+        <div class="table-responsive" *ngIf="!loadingProperties && filteredProperties.length > 0">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">ID</th>
+                <th>Property Listing</th>
+                <th>Type & Specs</th>
+                <th>Price / Rent</th>
+                <th>Listed by Owner</th>
+                <th>Status (Quick Change)</th>
+                <th style="text-align: right; width: 220px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of filteredProperties" class="table-row">
+                <td class="col-id">#{{ p.id }}</td>
+                <td class="col-main">
+                  <strong class="item-title">{{ p.title }}</strong>
+                  <div class="item-sub">📍 {{ p.location }}</div>
+                </td>
+                <td>
+                  <span class="spec-pill">{{ p.propertyType }}</span>
+                  <div class="specs-text" *ngIf="p.bedrooms != null || p.area != null">
+                    {{ p.bedrooms ? p.bedrooms + ' BHK • ' : '' }}{{ p.area ? p.area + ' sq.ft' : '' }}
+                  </div>
+                </td>
+                <td class="col-price">
+                  <div class="price-val" [class.rent-price-val]="p.status === 'For Rent'">
+                    {{ p.status === 'For Rent' ? '₹' + (p.price | number) + ' / mo' : '₹' + (p.price | number) }}
+                  </div>
+                </td>
+                <td>
+                  <div class="owner-cell">
+                    <span class="owner-name-tag">👤 {{ p.ownerName || 'Platform' }}</span>
+                    <span *ngIf="p.ownerEmail" class="owner-sub-email">{{ p.ownerEmail }}</span>
+                  </div>
+                </td>
+                <td>
+                  <!-- Interactive Quick Status Changer -->
+                  <div class="status-changer-wrap">
+                    <select
+                      class="status-select"
+                      [class.status-available]="p.status === 'Available'"
+                      [class.status-sold]="p.status === 'Sold'"
+                      [class.status-rent]="p.status === 'For Rent'"
+                      [disabled]="statusUpdatingId === p.id"
+                      [ngModel]="p.status"
+                      (ngModelChange)="changePropertyStatus(p, $event)"
+                    >
+                      <option value="Available">Available</option>
+                      <option value="Sold">Sold</option>
+                      <option value="For Rent">For Rent</option>
+                    </select>
+                    <span *ngIf="statusUpdatingId === p.id" class="inline-spinner" title="Saving status..."></span>
+                  </div>
+                </td>
+                <td style="text-align: right;">
+                  <div class="action-buttons-group">
+                    <a
+                      [routerLink]="['/properties', p.id]"
+                      class="btn btn-action btn-view"
+                      title="View public details"
+                    >
+                      👁️ View
+                    </a>
+                    <a
+                      [routerLink]="['/edit-property', p.id]"
+                      class="btn btn-action btn-edit"
+                      title="Edit this property"
+                    >
+                      ✏️ Edit
+                    </a>
+                    <button
+                      type="button"
+                      class="btn btn-action btn-delete"
+                      (click)="openDeletePropertyModal(p)"
+                      title="Delete this listing"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================= TAB 3: REGISTERED USERS ================= -->
+    <div *ngIf="activeTab === 'users'" class="tab-content-panel">
+
+      <div class="section-card">
+
+        <div class="section-card-header">
+          <div>
+            <h2 class="section-heading">📋 Registered Users Directory</h2>
+            <p class="section-subtext">
+              Directory of regular users registered on the platform. Administrator accounts are strictly excluded from this directory.
+            </p>
+          </div>
+          <span class="count-badge-lg">{{ filteredUsers.length }} Regular Users</span>
+        </div>
+
+        <!-- Role Filter Tabs (No Admin tab!) & Search -->
+        <div class="table-header-controls">
+          <div class="role-filters">
+            <button
+              type="button"
+              class="filter-tab"
+              [class.active-tab]="selectedRoleFilter === 'ALL'"
+              (click)="setUserRoleFilter('ALL')"
+            >
+              All Users ({{ users.length }})
+            </button>
+            <button
+              type="button"
+              class="filter-tab"
+              [class.active-tab]="selectedRoleFilter === 'TENANT'"
+              (click)="setUserRoleFilter('TENANT')"
+            >
+              Tenants
+            </button>
+            <button
+              type="button"
+              class="filter-tab"
+              [class.active-tab]="selectedRoleFilter === 'OWNER'"
+              (click)="setUserRoleFilter('OWNER')"
+            >
+              Owners
+            </button>
+            <button
+              type="button"
+              class="filter-tab"
+              [class.active-tab]="selectedRoleFilter === 'BUYER'"
+              (click)="setUserRoleFilter('BUYER')"
+            >
+              Buyers
+            </button>
+          </div>
+
+          <!-- Search Bar -->
+          <div class="search-wrap">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search by name, email, phone..."
+              [(ngModel)]="userSearchTerm"
+              (input)="onUserSearch()"
+            />
+          </div>
+        </div>
+
+        <!-- Loading Users State -->
+        <div *ngIf="loadingUsers" class="state-container">
+          <div class="spinner"></div>
+          <p>Loading registered users...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loadingUsers && filteredUsers.length === 0" class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h3>No Users Found</h3>
+          <p>No regular user matches your selected filter or search term.</p>
+        </div>
+
+        <!-- Users Table -->
+        <div class="table-responsive" *ngIf="!loadingUsers && filteredUsers.length > 0">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">ID</th>
+                <th>Full Name</th>
+                <th>Email Address</th>
+                <th>Phone Number</th>
+                <th>Role</th>
+                <th>Platform Activity</th>
+                <th style="text-align: right; width: 140px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of filteredUsers" class="table-row">
+                <td class="col-id">#{{ u.id }}</td>
+                <td class="col-name">
+                  <div class="user-cell">
+                    <span class="user-row-avatar">👤</span>
+                    <strong>{{ u.name }}</strong>
+                  </div>
+                </td>
+                <td class="col-email">{{ u.email }}</td>
+                <td class="col-phone">{{ u.phone || '—' }}</td>
+                <td>
+                  <span class="role-pill" [ngClass]="'role-' + u.role.toLowerCase()">
+                    {{ u.role }}
+                  </span>
+                </td>
+                <td class="col-activity">
+                  <span *ngIf="u.role === 'OWNER'" class="activity-badge">
+                    🏢 {{ u.propertyCount }} Properties Listed
+                  </span>
+                  <span *ngIf="u.role === 'TENANT'" class="activity-badge">
+                    📑 {{ u.rentalCount }} Rental Contracts
+                  </span>
+                  <span *ngIf="u.role === 'BUYER'" class="activity-badge">
+                    🎯 Buyer Profile
+                  </span>
+                </td>
+                <td style="text-align: right;">
+                  <button
+                    type="button"
+                    class="btn btn-details"
+                    (click)="openUserDetails(u.id)"
+                    title="View complete user details"
+                  >
+                    👁️ View Details
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================= TAB 4: RENTAL ACTIVITY ================= -->
+    <div *ngIf="activeTab === 'rentals'" class="tab-content-panel">
+
+      <div class="section-card">
+
+        <div class="section-card-header">
+          <div>
+            <h2 class="section-heading">📑 Platform Rental Activity & Contracts</h2>
+            <p class="section-subtext">
+              Inspect all rental contracts across all tenants and properties stored in the database.
+            </p>
+          </div>
+          <span class="count-badge-lg">{{ filteredRentals.length }} Contracts</span>
+        </div>
+
+        <!-- Controls: Search & Status Filters -->
+        <div class="controls-toolbar">
+          <div class="search-wrap">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search by tenant name, email, property title, location..."
+              [(ngModel)]="rentalSearchTerm"
+              (input)="onRentalSearch()"
+            />
+          </div>
+
+          <div class="filters-row">
+            <div class="role-filters">
+              <button
+                type="button"
+                class="filter-tab"
+                [class.active-tab]="rentalStatusFilter === 'ALL'"
+                (click)="setRentalStatusFilter('ALL')"
+              >
+                All Leases ({{ rentalContracts.length }})
+              </button>
+              <button
+                type="button"
+                class="filter-tab"
+                [class.active-tab]="rentalStatusFilter === 'ACTIVE'"
+                (click)="setRentalStatusFilter('ACTIVE')"
+              >
+                Active Leases
+              </button>
+              <button
+                type="button"
+                class="filter-tab"
+                [class.active-tab]="rentalStatusFilter === 'COMPLETED'"
+                (click)="setRentalStatusFilter('COMPLETED')"
+              >
+                Completed Leases
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading Rentals State -->
+        <div *ngIf="loadingRentals" class="state-container">
+          <div class="spinner"></div>
+          <p>Loading rental activity...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loadingRentals && filteredRentals.length === 0" class="empty-state">
+          <div class="empty-icon">📂</div>
+          <h3>No Rental Contracts Found</h3>
+          <p>No rental records match your current search or filter.</p>
+        </div>
+
+        <!-- Rentals Table -->
+        <div class="table-responsive" *ngIf="!loadingRentals && filteredRentals.length > 0">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">ID</th>
+                <th>Tenant Details</th>
+                <th>Associated Property</th>
+                <th>Monthly Rent</th>
+                <th>Lease Term</th>
+                <th>Lease Status</th>
+                <th style="text-align: right; width: 140px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of filteredRentals" class="table-row">
+                <td class="col-id">#{{ r.id }}</td>
+                <td class="col-main">
+                  <div class="tenant-name-row">
+                    <strong>{{ r.tenant.name }}</strong>
+                    <span class="role-pill role-tenant" style="font-size: 0.7rem; padding: 2px 6px;">TENANT</span>
+                  </div>
+                  <div class="item-sub">{{ r.tenant.email }} &bull; {{ r.tenant.phone || 'No phone' }}</div>
+                </td>
+                <td>
+                  <strong class="item-title">🏠 {{ r.property.title }}</strong>
+                  <div class="item-sub">📍 {{ r.property.location }} &bull; {{ r.property.propertyType }}</div>
+                </td>
+                <td class="col-price">
+                  <div class="price-val rent-price-val">
+                    ₹{{ r.monthlyRent | number }} <span style="font-size: 0.8rem; font-weight: 500;">/ mo</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="lease-dates">
+                    {{ r.startDate | date:'mediumDate' }} —
+                    {{ r.endDate ? (r.endDate | date:'mediumDate') : 'Present' }}
+                  </div>
+                </td>
+                <td>
+                  <span class="lease-status-pill" [class.lease-active]="isLeaseActive(r)">
+                    {{ isLeaseActive(r) ? '🟢 Active Lease' : '⚪ Completed' }}
+                  </span>
+                </td>
+                <td style="text-align: right;">
+                  <button
+                    type="button"
+                    class="btn btn-details"
+                    (click)="openUserDetails(r.tenant.id)"
+                    title="View tenant profile"
+                  >
+                    👤 Tenant Profile
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ================= PROPERTY DELETE CONFIRMATION MODAL ================= -->
+  <div *ngIf="propertyToDelete" class="modal-overlay">
+    <div class="modal-card modal-confirm-card">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: #b91c1c;">⚠️ Delete Property Listing?</h3>
+        <button type="button" class="modal-close" (click)="cancelDeleteProperty()" [disabled]="deletingProperty">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 20px 24px;">
+        <p>
+          Are you sure you want to permanently delete <strong>"{{ propertyToDelete.title }}"</strong>?
+        </p>
+        <p style="color: #64748b; font-size: 0.9rem; margin-top: 8px;">
+          📍 Location: {{ propertyToDelete.location }}<br />
+          👤 Listed by: {{ propertyToDelete.ownerName || 'Platform' }}
+        </p>
+        <p style="color: #dc2626; font-size: 0.85rem; margin-top: 12px;">
+          This action cannot be undone and will also cleanly archive any associated rental records.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" (click)="cancelDeleteProperty()" [disabled]="deletingProperty">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmDeleteProperty()" [disabled]="deletingProperty">
+          {{ deletingProperty ? 'Deleting...' : 'Confirm Delete' }}
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ================= INDIVIDUAL USER DETAILS MODAL ================= -->
@@ -275,6 +757,14 @@
         <div class="detail-section" *ngIf="selectedUser.role === 'OWNER' || selectedUser.properties.length > 0">
           <div class="section-header-row">
             <h3 class="section-sub-title">🏢 Properties Listed by this Owner ({{ selectedUser.properties.length }})</h3>
+            <button
+              *ngIf="selectedUser.properties.length > 0"
+              type="button"
+              class="btn-link"
+              (click)="viewOwnerPropertiesInTab(selectedUser.name)"
+            >
+              Manage in All Properties Tab &rarr;
+            </button>
           </div>
 
           <div *ngIf="selectedUser.properties.length === 0" class="empty-sub-card">
@@ -310,6 +800,14 @@
         <div class="detail-section" *ngIf="selectedUser.role === 'TENANT' || selectedUser.rentalHistory.length > 0">
           <div class="section-header-row">
             <h3 class="section-sub-title">📑 Rental History Records ({{ selectedUser.rentalHistory.length }})</h3>
+            <button
+              *ngIf="selectedUser.rentalHistory.length > 0"
+              type="button"
+              class="btn-link"
+              (click)="viewTenantRentalsInTab(selectedUser.name)"
+            >
+              View in Rental Activity Tab &rarr;
+            </button>
           </div>
 
           <div *ngIf="selectedUser.rentalHistory.length === 0" class="empty-sub-card">
@@ -336,7 +834,7 @@
         <div class="detail-section" *ngIf="selectedUser.role === 'BUYER'">
           <h3 class="section-sub-title">🎯 Buyer Profile Overview</h3>
           <p class="buyer-note">
-            This account is registered as a Property Buyer. Buyers can explore listings, calculate EMI mortgages with the Affordability Checker, and make inquiries.
+            This account is registered as a Property Buyer. Buyers can explore listings, calculate EMI mortgages with the Affordability Checker, and submit inquiries.
           </p>
         </div>
 

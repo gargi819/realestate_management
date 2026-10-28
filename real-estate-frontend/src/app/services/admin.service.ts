@@ -21,6 +21,24 @@ export interface AdminStats {
   totalRenters: number;
   totalBuyers: number;
   totalOwners: number;
+  totalRentalContracts: number;
+}
+
+export interface AdminProperty {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  propertyType: string;
+  location: string;
+  area: number;
+  bedrooms: number;
+  bathrooms: number;
+  status: string;
+  ownerId?: number;
+  ownerName?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
 }
 
 export interface AdminUserDetails {
@@ -51,5 +69,21 @@ export class AdminService {
 
   getUserDetails(userId: number): Observable<AdminUserDetails> {
     return this.http.get<AdminUserDetails>(`${this.baseUrl}/users/${userId}`).pipe(timeout(this.REQUEST_TIMEOUT));
+  }
+
+  getAllProperties(): Observable<AdminProperty[]> {
+    return this.http.get<AdminProperty[]>(`${this.baseUrl}/properties`).pipe(timeout(this.REQUEST_TIMEOUT));
+  }
+
+  updatePropertyStatus(propertyId: number, status: string): Observable<Property> {
+    return this.http.put<Property>(`${this.baseUrl}/properties/${propertyId}/status`, { status }).pipe(timeout(this.REQUEST_TIMEOUT));
+  }
+
+  deleteProperty(propertyId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/properties/${propertyId}`).pipe(timeout(this.REQUEST_TIMEOUT));
+  }
+
+  getAllRentalContracts(): Observable<RentalHistory[]> {
+    return this.http.get<RentalHistory[]>(`${this.baseUrl}/rental-history`).pipe(timeout(this.REQUEST_TIMEOUT));
   }
 }

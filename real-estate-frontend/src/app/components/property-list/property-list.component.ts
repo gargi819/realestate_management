@@ -134,12 +134,13 @@ export class PropertyListComponent implements OnInit {
     const user = this.authService.getCurrentUser();
     if (!user) return false;
     if (user.role === 'ADMIN') return true;
-    return property.ownerId === user.id;
+    if (user.role === 'OWNER' && property.ownerId && property.ownerId === user.id) return true;
+    return false;
   }
 
   isMyProperty(property: Property): boolean {
     const user = this.authService.getCurrentUser();
-    return !!(user && property.ownerId === user.id);
+    return !!(user && user.role === 'OWNER' && property.ownerId === user.id);
   }
 
   isOwnerOrAdmin(): boolean {

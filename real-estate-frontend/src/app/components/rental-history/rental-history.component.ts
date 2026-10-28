@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { RentalHistoryService } from '../../services/rental-history.service';
 import { PropertyService } from '../../services/property.service';
 import { AuthService } from '../../services/auth.service';
@@ -15,6 +15,7 @@ import { Property } from '../../models/property';
   styleUrl: './rental-history.component.css'
 })
 export class RentalHistoryComponent implements OnInit {
+  private router = inject(Router);
   private rentalService = inject(RentalHistoryService);
   private propertyService = inject(PropertyService);
   public authService = inject(AuthService);
@@ -55,6 +56,11 @@ export class RentalHistoryComponent implements OnInit {
 
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
+    if (user && user.role === 'ADMIN') {
+      this.router.navigate(['/admin']);
+      return;
+    }
+
     if (user && user.id) {
       this.currentTenant = user;
       this.selectedTenantId = user.id;

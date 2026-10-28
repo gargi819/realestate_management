@@ -43,6 +43,12 @@ public class Property {
     @Column(name = "owner_id")
     private Long ownerId;
 
+    @Column(name = "monthly_rent")
+    private Double monthlyRent;
+
+    @Column(name = "security_deposit")
+    private Double securityDeposit = 0.0;
+
     // Default No-Argument Constructor (Required by JPA/Hibernate)
     public Property() {
     }
@@ -148,6 +154,28 @@ public class Property {
 
     public void setOwnerId(Long ownerId) {
         this.ownerId = ownerId;
+    }
+
+    public Double getMonthlyRent() {
+        if (monthlyRent != null) {
+            return monthlyRent;
+        }
+        if ("For Rent".equalsIgnoreCase(status)) {
+            return price;
+        }
+        return null;
+    }
+
+    public void setMonthlyRent(Double monthlyRent) {
+        this.monthlyRent = monthlyRent;
+    }
+
+    public Double getSecurityDeposit() {
+        return securityDeposit != null ? securityDeposit : 0.0;
+    }
+
+    public void setSecurityDeposit(Double securityDeposit) {
+        this.securityDeposit = securityDeposit;
     }
 
     @Override

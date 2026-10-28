@@ -14,18 +14,21 @@
         </a>
 
         <!-- Admin Dashboard Link (Only visible to Admin) -->
-        <ng-container *ngIf="authService.currentUser$ | async as u">
-          <a *ngIf="u.role === 'ADMIN'" routerLink="/admin" routerLinkActive="active" class="nav-link admin-nav-link">
-            👑 Admin Dashboard
+        <a *ngIf="(authService.currentUser$ | async)?.role === 'ADMIN'" routerLink="/admin" routerLinkActive="active" class="nav-link admin-nav-link">
+          👑 Admin Dashboard
+        </a>
+
+        <!-- Non-Admin Navigation Links (Hidden for Admin, visible to Regular Users / Guests) -->
+        <ng-container *ngIf="(authService.currentUser$ | async)?.role !== 'ADMIN'">
+          <a *ngIf="!authService.isLoggedIn() || (authService.currentUser$ | async)?.role === 'TENANT'" 
+             routerLink="/rental-history" routerLinkActive="active" class="nav-link">
+            My Rental History
+          </a>
+          <a *ngIf="!authService.isLoggedIn() || (authService.currentUser$ | async)?.role === 'OWNER'" 
+             routerLink="/add-property" routerLinkActive="active" class="nav-link nav-btn">
+            Add Property
           </a>
         </ng-container>
-
-        <a routerLink="/rental-history" routerLinkActive="active" class="nav-link">
-          My Rental History
-        </a>
-        <a routerLink="/add-property" routerLinkActive="active" class="nav-link nav-btn">
-          Add Property
-        </a>
 
         <!-- Auth Section -->
         <ng-container *ngIf="authService.currentUser$ | async as user; else guestNav">

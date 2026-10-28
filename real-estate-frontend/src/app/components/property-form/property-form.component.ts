@@ -40,6 +40,12 @@ export class PropertyFormComponent implements OnInit {
       this.isEditMode = true;
       this.propertyId = Number(idParam);
       this.loadProperty(this.propertyId);
+    } else {
+      const user = this.authService.getCurrentUser();
+      if (user && user.role === 'ADMIN') {
+        this.router.navigate(['/admin']);
+        return;
+      }
     }
   }
 
@@ -47,14 +53,41 @@ export class PropertyFormComponent implements OnInit {
     this.propertyForm = this.fb.group({
       title: ['', Validators.required],
       description: ['', Validators.required],
-      price: [null, [Validators.required, Validators.min(0.01)]],
+      price: [null, [Validators.min(0.01)]],
+      monthlyRent: [null],
+      securityDeposit: [0, [Validators.min(0)]],
       propertyType: ['', Validators.required],
       location: ['', Validators.required],
-      area: [null, [Validators.required, Validators.min(0.01)]],
+      area: [null, [Validators.required, Validators.min(1)]],
       bedrooms: [0, [Validators.required, Validators.min(0)]],
       bathrooms: [0, [Validators.required, Validators.min(0)]],
       status: ['Available', Validators.required]
     });
+
+    this.applyStatusValidators(this.propertyForm.get('status')?.value);
+
+    this.propertyForm.get('status')?.valueChanges.subscribe(status => {
+      this.applyStatusValidators(status);
+    });
+  }
+
+  private applyStatusValidators(status: string): void {
+    const priceControl = this.propertyForm.get('price');
+    const monthlyRentControl = this.propertyForm.get('monthlyRent');
+    const securityDepositControl = this.propertyForm.get('securityDeposit');
+
+    if (status === 'For Rent') {
+      monthlyRentControl?.setValidators([Validators.required, Validators.min(1)]);
+      securityDepositControl?.setValidators([Validators.required, Validators.min(0)]);
+      priceControl?.clearValidators();
+    } else {
+      priceControl?.setValidators([Validators.required, Validators.min(0.01)]);
+      monthlyRentControl?.clearValidators();
+      securityDepositControl?.clearValidators();
+    }
+    priceControl?.updateValueAndValidity();
+    monthlyRentControl?.updateValueAndValidity();
+    securityDepositControl?.updateValueAndValidity();
   }
 
   private loadProperty(id: number): void {
@@ -72,7 +105,19 @@ export class PropertyFormComponent implements OnInit {
           return;
         }
         this.existingOwnerId = property.ownerId || null;
+
+        // Ensure monthlyRent and securityDeposit are populated if status is For Rent
+        if (property.status === 'For Rent') {
+          if (!property.monthlyRent && property.price) {
+            property.monthlyRent = property.price;
+          }
+          if (property.securityDeposit === undefined || property.securityDeposit === null) {
+            property.securityDeposit = 0;
+          }
+        }
+
         this.propertyForm.patchValue(property);
+        this.applyStatusValidators(property.status);
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -100,8 +145,18 @@ export class PropertyFormComponent implements OnInit {
     this.submitting = true;
     this.errorMessage = '';
     this.cdr.detectChanges();
-    const propertyData: Property = this.propertyForm.value;
+    const propertyData: Property = { ...this.propertyForm.value };
     const currentUser = this.authService.getCurrentUser();
+
+    if (propertyData.status === 'For Rent') {
+      propertyData.price = Number(propertyData.monthlyRent || propertyData.price);
+      propertyData.monthlyRent = Number(propertyData.monthlyRent);
+      propertyData.securityDeposit = Number(propertyData.securityDeposit || 0);
+    } else {
+      propertyData.price = Number(propertyData.price);
+      propertyData.monthlyRent = undefined;
+      propertyData.securityDeposit = undefined;
+    }
 
     if (this.isEditMode && this.propertyId) {
       if (this.existingOwnerId) {
@@ -116,7 +171,11 @@ export class PropertyFormComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error updating property:', err);
-          this.errorMessage = 'Unable to save property. Please try again.';
+          if (err?.status === 403) {
+            this.errorMessage = 'Permission denied: You are not authorized to edit this property.';
+          } else {
+            this.errorMessage = 'Unable to save property. Please try again.';
+          }
           this.submitting = false;
           this.cdr.detectChanges();
         }
@@ -134,7 +193,11 @@ export class PropertyFormComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error adding property:', err);
-          this.errorMessage = 'Unable to save property. Please try again.';
+          if (err?.status === 403) {
+            this.errorMessage = 'Permission denied: Only Owners and Admins can add properties.';
+          } else {
+            this.errorMessage = 'Unable to save property. Please try again.';
+          }
           this.submitting = false;
           this.cdr.detectChanges();
         }

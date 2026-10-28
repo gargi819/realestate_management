@@ -72,7 +72,13 @@
         <div class="info-row highlight-price-row">
           <span class="info-key">{{ property.status === 'For Rent' ? 'Monthly Rent' : 'Selling Price' }}</span>
           <span class="info-val price-highlight">
-            ₹{{ property.price | number }}{{ property.status === 'For Rent' ? ' / month' : '' }}
+            ₹{{ (property.status === 'For Rent' ? (property.monthlyRent || property.price) : property.price) | number }}{{ property.status === 'For Rent' ? ' / month' : '' }}
+          </span>
+        </div>
+        <div class="info-row" *ngIf="property.status === 'For Rent'">
+          <span class="info-key">Security Deposit</span>
+          <span class="info-val deposit-highlight">
+            ₹{{ (property.securityDeposit || 0) | number }}
           </span>
         </div>
       </div>
@@ -94,9 +100,12 @@
       <button *ngIf="property.status !== 'For Rent'" (click)="toggleAffordability()" class="btn btn-affordability">
         {{ showAffordability ? '✕ Hide Affordability Checker' : '🧮 Check Affordability' }}
       </button>
-      <a *ngIf="property.status === 'For Rent'" routerLink="/rental-history" class="btn btn-rent-compare">
-        📊 Compare Market Rentals
-      </a>
+
+      <!-- Smart Rental Comparison Button for Rental Properties -->
+      <button *ngIf="property.status === 'For Rent'" (click)="toggleComparison()" class="btn btn-rent-compare">
+        {{ showComparison ? '✕ Hide Cheaper Rentals' : '🔍 Find Cheaper Rentals' }}
+      </button>
+
       <a *ngIf="canManageProperty()" [routerLink]="['/edit-property', property.id]" class="btn btn-edit">
         Edit Property
       </a>
@@ -108,6 +117,138 @@
       </a>
     </div>
 
+  </div>
+
+  <!-- FEATURE 2: Smart Cheaper Rental Comparison Section (Rent only) -->
+  <div *ngIf="!loading && property && showComparison && property.status === 'For Rent'" class="card comparison-card" id="comparison-section">
+    <div class="comparison-header">
+      <div class="header-icon">🔍</div>
+      <div>
+        <h2 class="comparison-title">Smart Rental Comparison in {{ comparisonData?.locality || property.location }}</h2>
+        <p class="comparison-subtitle">
+          Comparing available rentals based on monthly rent, area, security deposit, and potential savings.
+        </p>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingComparison" class="comparison-loading">
+      <div class="spinner"></div>
+      <p>Searching for cheaper rental properties nearby...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!loadingComparison && comparisonError" class="alert alert-error">
+      {{ comparisonError }}
+    </div>
+
+    <!-- Comparison Content -->
+    <div *ngIf="!loadingComparison && comparisonData" class="comparison-content">
+
+      <!-- Selected Baseline Property Overview Banner -->
+      <div class="baseline-banner">
+        <div class="baseline-tag">CURRENT SELECTION</div>
+        <div class="baseline-row">
+          <div class="baseline-info">
+            <h3 class="baseline-title">{{ comparisonData.selectedTitle }}</h3>
+            <p class="baseline-sub">📍 {{ comparisonData.selectedLocation }} &bull; {{ comparisonData.selectedPropertyType }} &bull; {{ comparisonData.selectedBedrooms }} BHK &bull; {{ comparisonData.selectedBathrooms }} Bath</p>
+          </div>
+          <div class="baseline-metrics">
+            <div class="b-metric">
+              <span class="bm-label">Rent</span>
+              <span class="bm-val">₹{{ comparisonData.selectedRent | number }}/mo</span>
+            </div>
+            <div class="b-metric">
+              <span class="bm-label">Area</span>
+              <span class="bm-val">{{ comparisonData.selectedArea }} sq.ft</span>
+            </div>
+            <div class="b-metric">
+              <span class="bm-label">Deposit</span>
+              <span class="bm-val">₹{{ comparisonData.selectedDeposit | number }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Message -->
+      <div class="summary-box" [ngClass]="comparisonData.cheaperAlternatives.length > 0 ? 'summary-found' : 'summary-empty'">
+        <span class="summary-icon">{{ comparisonData.cheaperAlternatives.length > 0 ? '💡' : 'ℹ️' }}</span>
+        <span>{{ comparisonData.summaryMessage }}</span>
+      </div>
+
+      <!-- Alternatives Grid -->
+      <div *ngIf="comparisonData.cheaperAlternatives.length > 0" class="alternatives-section">
+        <h3 class="alternatives-heading">
+          Cheaper Available Alternatives ({{ comparisonData.cheaperAlternatives.length }} found)
+        </h3>
+
+        <div class="alternatives-grid">
+          <div *ngFor="let alt of comparisonData.cheaperAlternatives" class="alt-card">
+            
+            <div class="alt-card-header">
+              <div class="alt-location-badge" [class.badge-same-locality]="alt.sameLocality">
+                {{ alt.sameLocality ? 'Same Locality' : 'Same City' }}
+              </div>
+              <div class="alt-savings-badge">
+                💰 Saves ₹{{ alt.monthlySavings | number }}/mo ({{ alt.savingsPercentage }}%)
+              </div>
+            </div>
+
+            <h4 class="alt-title">{{ alt.title }}</h4>
+            <p class="alt-loc">📍 {{ alt.location }}</p>
+
+            <div class="alt-metrics-table">
+              <div class="alt-row">
+                <span class="alt-lbl">Monthly Rent</span>
+                <span class="alt-val highlight-rent">₹{{ alt.monthlyRent | number }} / mo</span>
+              </div>
+              <div class="alt-row">
+                <span class="alt-lbl">Rent Savings</span>
+                <span class="alt-val savings-text">₹{{ alt.monthlySavings | number }} lower</span>
+              </div>
+              <div class="alt-row">
+                <span class="alt-lbl">Area (sq.ft)</span>
+                <span class="alt-val">
+                  {{ alt.area }} sq.ft
+                  <span class="diff-tag" [ngClass]="alt.areaDifference >= 0 ? 'tag-pos' : 'tag-neg'">
+                    ({{ alt.areaDifference >= 0 ? '+' + alt.areaDifference : alt.areaDifference }} sq.ft)
+                  </span>
+                </span>
+              </div>
+              <div class="alt-row">
+                <span class="alt-lbl">Security Deposit</span>
+                <span class="alt-val">
+                  ₹{{ alt.securityDeposit | number }}
+                  <span class="diff-tag" [ngClass]="alt.depositDifference >= 0 ? 'tag-pos' : 'tag-neg'">
+                    ({{ alt.depositDifference >= 0 ? '₹' + (alt.depositDifference | number) + ' lower' : '₹' + (-alt.depositDifference | number) + ' higher' }})
+                  </span>
+                </span>
+              </div>
+              <div class="alt-row">
+                <span class="alt-lbl">Type & Configuration</span>
+                <span class="alt-val">{{ alt.propertyType }} &bull; {{ alt.bedrooms }} BHK &bull; {{ alt.bathrooms }} Bath</span>
+              </div>
+            </div>
+
+            <div class="alt-actions">
+              <a [routerLink]="['/properties', alt.id]" class="btn btn-view-alt">
+                View Property Details →
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- No Alternatives Found State -->
+      <div *ngIf="comparisonData.cheaperAlternatives.length === 0" class="no-alternatives-card">
+        <div class="no-alt-icon">🏙️</div>
+        <h4>No Cheaper Rentals Found</h4>
+        <p>Currently, this listing offers the most competitive rent in {{ comparisonData.locality || comparisonData.city || 'this area' }}. Check back soon as new rental listings are published regularly!</p>
+        <a routerLink="/properties" class="btn btn-outline" style="margin-top: 12px; display: inline-block;">Browse All Listings</a>
+      </div>
+
+    </div>
   </div>
 
   <!-- FEATURE 1: Property Affordability Checker Section (Purchase only) -->

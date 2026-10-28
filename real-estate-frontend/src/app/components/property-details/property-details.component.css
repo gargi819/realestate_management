@@ -714,3 +714,329 @@
   }
 }
 
+/* SMART RENTAL COMPARISON STYLES */
+.deposit-highlight {
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.comparison-card {
+  margin-top: 24px;
+  border-top: 4px solid #0284c7;
+}
+
+.comparison-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.comparison-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.comparison-subtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.comparison-loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+}
+
+/* Baseline Property Banner */
+.baseline-banner {
+  background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.baseline-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  background-color: #0284c7;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.baseline-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.baseline-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.baseline-sub {
+  font-size: 0.85rem;
+  color: #475569;
+  margin: 0;
+}
+
+.baseline-metrics {
+  display: flex;
+  gap: 16px;
+}
+
+.b-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.bm-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.bm-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Summary Box */
+.summary-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+.summary-found {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.summary-empty {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.summary-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Alternatives Section */
+.alternatives-heading {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+.alternatives-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.alt-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.alt-card:hover {
+  border-color: #0284c7;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.12);
+  transform: translateY(-2px);
+}
+
+.alt-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.alt-location-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.alt-location-badge.badge-same-locality {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.alt-savings-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #15803d;
+  background-color: #dcfce7;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.alt-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.alt-loc {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 16px 0;
+}
+
+.alt-metrics-table {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.88rem;
+}
+
+.alt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed #e2e8f0;
+  padding-bottom: 6px;
+}
+
+.alt-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.alt-lbl {
+  color: #64748b;
+}
+
+.alt-val {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.alt-val.highlight-rent {
+  color: #0284c7;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.alt-val.savings-text {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.diff-tag {
+  font-size: 0.75rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+  font-weight: 700;
+}
+
+.diff-tag.tag-pos {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.diff-tag.tag-neg {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.alt-actions {
+  margin-top: auto;
+}
+
+.btn-view-alt {
+  display: block;
+  text-align: center;
+  background-color: #0284c7;
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-view-alt:hover {
+  background-color: #0369a1;
+  color: #ffffff;
+}
+
+/* No Alternatives Found Card */
+.no-alternatives-card {
+  text-align: center;
+  padding: 36px 20px;
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+}
+
+.no-alt-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.no-alternatives-card h4 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+}
+
+.no-alternatives-card p {
+  font-size: 0.9rem;
+  color: #64748b;
+  max-width: 500px;
+  margin: 0 auto;
+}
+

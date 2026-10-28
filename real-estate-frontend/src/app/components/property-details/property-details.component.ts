@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PropertyService } from '../../services/property.service';
 import { AuthService } from '../../services/auth.service';
-import { Property } from '../../models/property';
+import { Property, RentalComparisonResponse } from '../../models/property';
 
 @Component({
   selector: 'app-property-details',
@@ -26,6 +26,12 @@ export class PropertyDetailsComponent implements OnInit {
   showDeleteModal = false;
   errorMessage = '';
   successMessage = '';
+
+  // Smart Rental Comparison State
+  showComparison = false;
+  loadingComparison = false;
+  comparisonError = '';
+  comparisonData: RentalComparisonResponse | null = null;
 
   // Feature 1: Affordability Checker State
   showAffordability = false;
@@ -50,15 +56,19 @@ export class PropertyDetailsComponent implements OnInit {
   affordabilityErrors: { [key: string]: string } = {};
 
   ngOnInit(): void {
-    const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam) {
-      this.propertyId = Number(idParam);
-      this.loadProperty(this.propertyId);
-    } else {
-      this.loading = false;
-      this.errorMessage = 'Property not found.';
-      this.cdr.detectChanges();
-    }
+    this.route.paramMap.subscribe(params => {
+      const idParam = params.get('id');
+      if (idParam) {
+        this.propertyId = Number(idParam);
+        this.showComparison = false;
+        this.comparisonData = null;
+        this.loadProperty(this.propertyId);
+      } else {
+        this.loading = false;
+        this.errorMessage = 'Property not found.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   loadProperty(id: number): void {
@@ -67,6 +77,14 @@ export class PropertyDetailsComponent implements OnInit {
     this.propertyService.getPropertyById(id).subscribe({
       next: (data) => {
         this.property = data;
+        if (this.property && this.property.status === 'For Rent') {
+          if (!this.property.monthlyRent && this.property.price) {
+            this.property.monthlyRent = this.property.price;
+          }
+          if (this.property.securityDeposit === undefined || this.property.securityDeposit === null) {
+            this.property.securityDeposit = 0;
+          }
+        }
         this.loading = false;
         // Default down payment to 20% of property price
         if (this.property && this.property.price > 0) {
@@ -90,12 +108,40 @@ export class PropertyDetailsComponent implements OnInit {
     });
   }
 
+  // Toggle Smart Rental Comparison
+  toggleComparison(): void {
+    this.showComparison = !this.showComparison;
+    if (this.showComparison && !this.comparisonData && this.propertyId) {
+      this.loadComparison(this.propertyId);
+    }
+    this.cdr.detectChanges();
+  }
+
+  loadComparison(id: number): void {
+    this.loadingComparison = true;
+    this.comparisonError = '';
+    this.propertyService.getCheaperRentals(id).subscribe({
+      next: (data) => {
+        this.comparisonData = data;
+        this.loadingComparison = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading rental comparisons:', err);
+        this.comparisonError = 'Unable to load cheaper rental comparisons. Please try again.';
+        this.loadingComparison = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   // Check if current user is Admin or the Property Owner
   canManageProperty(): boolean {
     const user = this.authService.getCurrentUser();
     if (!user || !this.property) return false;
     if (user.role === 'ADMIN') return true;
-    return this.property.ownerId === user.id;
+    if (user.role === 'OWNER' && this.property.ownerId && this.property.ownerId === user.id) return true;
+    return false;
   }
 
   // Toggle Affordability Section
